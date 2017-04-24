@@ -1,5 +1,4 @@
-namespace CarbonSphere\DoorControl;
-
+<?PHP
 
 class uhppote {
     private $type = 0x17;
@@ -617,3 +616,4 @@ class uhppote {
 
 }
 
+?>
