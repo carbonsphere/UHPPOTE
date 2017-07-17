@@ -19,6 +19,7 @@ Network Communication Class
 # Add Example Codes
     > example.php -> Gets Remote Monitoring IP/Port of board
     > search.php  -> GET Controller board's current setting
+    > getRecordExample.php -> GET/SET Record Index, Get Records
 
 
 
