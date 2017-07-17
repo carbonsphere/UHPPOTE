@@ -12,7 +12,9 @@ class uhppote {
       'get_time'          => 0x32,
       'search'            => 0x94,  // Get Device Serial Number SN
       'set_ip'            => 0x96,  // Set Device IP
-      'get_record'        => 0,
+      'get_recordIndex'   => 0xb4,  // Get Swipe Records Index
+      'set_recordIndex'   => 0xb2,  // Set Swipe Records Index
+      'get_records'       => 0xb0,  // Get Swipe Records from Index + 1
       'set_ripp'          => 0x90,  //Remote Event receiver IP and port
       'get_ripp'          => 0x92,  //Remote Event receiver IP and port
       'get_auth_rec'      => 0x58,  // Get Number of authorized record
@@ -331,8 +333,67 @@ class uhppote {
                   'sn'    => $sn,
                 );
 
-
                 break;
+            /*
+             * Process Set Record Index return
+             */
+            case $this->command['set_recordIndex']:
+                $recIndex=hexdec($this->reverseByte(substr($receive,$index,8)));
+                $index+=8;
+
+                $ret = array(
+                  'status' => ($recIndex?"Success":"Failed")
+                );
+                break;
+            /*
+             * Get Current Record Index
+             */
+            case $this->command['get_recordIndex']:
+                $recIndex=hexdec($this->reverseByte(substr($receive,$index,8)));
+                $index+=8;
+                $ret = array(
+                  'recordIndex' => $recIndex
+                );
+                break;
+
+			case $this->command['get_records']:
+                $recIndex=hexdec($this->reverseByte(substr($receive,$index,8)));
+                $index+=8;
+                $type = substr($receive,$index,2);
+                $index+=2;
+                $access = substr($receive,$index,2);
+                $index+=2;
+                $door = substr($receive,$index,2);
+                $index+=2;
+                $doorStat = substr($receive,$index,2);
+                $index+=2;
+                $cardid = hexdec($this->reverseByte(substr($receive,$index,8)));
+                $index+=8;
+                $swipeymdhms = str_split(substr($receive,$index,14),2);
+                $swipeymdhmsFormated = sprintf("%s%s-%s-%s %s:%s:%s",
+                  $swipeymdhms[0],  // Year First 2
+                  $swipeymdhms[1],  // Year Second 2
+                  $swipeymdhms[2],  // Month
+                  $swipeymdhms[3],  // Day
+                  $swipeymdhms[4],  // Hour
+                  $swipeymdhms[5],  // Minute
+                  $swipeymdhms[6]  // Second
+                );
+                $index+=14;
+                $rType = substr($receive,$index,2);
+                $index+=2;
+
+                $ret = array(
+                  'Index'   => $recIndex,
+                  'Type'    => $type,
+                  'Access'  => $access,
+                  'Door'    => $door,
+                  'DoorStat' => $doorStat,
+                  'CardId'  => $cardid,
+                  'swipeymdhms'    => $swipeymdhmsFormated,
+                  'rType'   => $rType,
+                );
+                break;                
 
             default:
                 $this->debug("Error: unable to process command. Unknown. ".$cmd );
@@ -486,6 +547,7 @@ class uhppote {
 
                 $hexStr .= $Y1 .$Y2 . $M . $D . $H . $m . $s;
                 break;
+            case 'get_recordIndex':
             case 'get_time':            // Get Device Time
             case 'dev_status':          // Get Device Status
             case 'get_auth_rec':        // Get Auth Record
@@ -497,6 +559,18 @@ class uhppote {
                 $hexStr .= $this->sn;   // Add Serial Number
                 $hexStr .= '01';        // Add Door Number 01 02 03 04
                 $this->debug("Open Door");
+                break;
+            case 'set_recordIndex':
+                $hexStr .= $this->sn;   // Add Serial Number
+                $hexStr .= $this->reverseByte(sprintf("%08X", $dt)); // Add Index hex into command string.
+                $hexStr .= "55AAAA55";
+                $this->debug("Set Record to $dt");
+                break;
+            case 'get_records':
+                $hexStr .= $this->sn;   // Add Serial Number
+                $dt++;  //Using DT variable as Record Index
+                $hexStr .= $this->reverseByte(sprintf("%08X", $dt)); // Add Index hex into command string.
+                $this->debug("Get Record from Index + 1");
                 break;
             default:
                 $this->debug("Error unable to find command ".$cmd);
