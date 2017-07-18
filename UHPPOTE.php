@@ -176,7 +176,7 @@ class uhppote {
             case $this->command['dev_status']:
                 $lastIndexO=substr($receive,$index,8);
                 $index+=8;
-                $lastIndex = $this->reverseByte($lastIndexO);
+                $lastIndex = hexdec($this->reverseByte($lastIndexO));
 
                 $swipeRecord=substr($receive,$index,2);
                 $index+=2;
@@ -264,7 +264,7 @@ class uhppote {
 
 
                 $ret = array(
-                  'index'             => intval($lastIndex),
+                  'index'             => $lastIndex,
                   'swipeRecord'       => $swipeRecord,
                   'noaccess'          => $noAccess,
                   'doornum'           => $doornum,
