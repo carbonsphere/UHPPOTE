@@ -516,6 +516,14 @@ class uhppote {
                 }
 
                 break;
+
+            /*
+             * addCardId['beg']  Beginning date of auth period
+             * addCardId['end']  End date of auth period
+             * beg/end format [ year month day ]
+             * Ex: 2000 01 01   "20000101" year 2000 jan 1st
+             * Max End date "20291231"  2029 Dec 31st
+             */
             case 'add_auth':                        // Add/Edit Card ID
                 $hexStr .= $this->sn;   // Add Serial Number
                 if(isset($addCardId['cardid'])) {
@@ -552,6 +560,21 @@ class uhppote {
             case 'dev_status':          // Get Device Status
             case 'get_auth_rec':        // Get Auth Record
                 $hexStr .= $this->sn;   // Add Serial Number
+                break;
+            case 'get_auth':
+                $hexStr .= $this->sn;   // Add Serial Number
+                if(isset($addCardId['cardid'])) {
+                    if($addCardId['cardid'] == 0 || $addCardId['cardid'] == 4294967295 ||  $addCardId['cardid'] >= 4294967040) {
+                        $this->debug("Error: invalid ID " . $addCardId['cardid']);
+                        break;
+                    }
+                    $cardidHex = base_convert($addCardId['cardid'], 10, 16);
+                    $c = strlen($cardidHex);
+                    for ($i = 8 - $c; $i > 0; $i--) {
+                        $cardidHex = '0' . $cardidHex;
+                    }
+                    $hexStr .= $this->reverseByte($cardidHex);
+                }
                 break;
             case 'search':              // Search for Devices
                 break;
