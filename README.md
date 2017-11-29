@@ -12,8 +12,8 @@ UHPPOTE door controller, Weigand Access Control system. 微耕門禁開源
 
 # Donation Address
 
-####If this source helps you in anyway, please consider donating and like this project.
-####Thanks!
+##### If this source helps you in anyway, please consider donating and "STAR" this github project.
+##### Thanks!
 
 - BTC: 395vsb41m46voFyhrgYMh6TauWKmNqJAtm
 - ETH: 0xB205A4560BBc9840b80d36245333401E65d4f05e
