@@ -25,6 +25,8 @@ class uhppote {
       'door_delay'        => 0x80,  // Set Door Delay seconds
       'door_delay_get'    => 0x82,  // Get Door Delay seconds
       'userid'            => 0x5C,  // User ID is like memory slot of system
+      'set_timeAccess'    => 0x88,  // Set Access by weekday/time
+      'get_timeAccess'    => 0x98,  // Get weekday/time access settings
     );
 
     private $ymd_mask = array(
@@ -594,6 +596,49 @@ class uhppote {
                 $dt++;  //Using DT variable as Record Index
                 $hexStr .= $this->reverseByte(sprintf("%08X", $dt)); // Add Index hex into command string.
                 $this->debug("Get Record from Index + 1");
+                break;
+
+                /**
+                 * addCardId
+                 * ['beg']    : beginning Year Month Day : 20190120
+                 * ['end']    : end Year Month Day       : 20200120
+                 * ['w1']     : Monday                   : '00' = not allowed, '01' = allowed
+                 * ['w2']     : Tuesday                  : '00' = not allowed, '01' = allowed
+                 * ['w3']     : Wedsday                  : '00' = not allowed, '01' = allowed
+                 * ['w4']     : Thursday                 : '00' = not allowed, '01' = allowed
+                 * ['w5']     : Friday                   : '00' = not allowed, '01' = allowed
+                 * ['w6']     : Saturday                 : '00' = not allowed, '01' = allowed
+                 * ['w7']     : Sunday                   : '00' = not allowed, '01' = allowed
+                 * ['time1beg'] : Slot 1 Beginning time  : 00:00 midnight    = '0000' Initial time
+                 * ['time1end'] : Slot 1 Ending time     : 23:59 end of day  = '2359' Max end time
+                 * ['time2beg'] : Slot 2 Beginning time
+                 * ['time2end'] : Slot 2 Ending time
+                 * ['time3beg'] : Slot 3 Beginning time
+                 * ['time3end'] : Slot 3 Ending time
+                 * ['countDay'] : Total Allowed Access count per day       : '00' unlimited, '10' 10 access allowed per day
+                 * ['countMonth'] : Total Allowed Access count per month   : '00' unlimited, '10' 10 access allowed per month
+                 * ['countZone1'] : Total Allowed Access for zone 1        : '00' unlimited
+                 * ['countZone2'] : Total Allowed Access for zone 2       
+                 * ['countZone3'] : Total Allowed Access for zone 3
+                 * ['weekend']    : Weekend Access control              : '00' allowed over weekend '01' deny over weekend
+                 */
+            case 'set_timeAccess':
+                $hexStr .= $this->sn;   // Add Serial Number
+                $hexStr .= '01';           // Index to be modified
+                $hexStr .= '01';            // Beg Date
+                $hexStr .= '01';            // End Date
+                $hexStr .= $addCardId['w1'] . $addCardId['w2'] . $addCardId['w3'] . $addCardId['w4']. 
+                    $addCardId['w5'] . $addCardId['w6'] . $addCardId['w7'];
+                $hexStr .= $addCardId['time1beg'] . $addCardId['time1end'] . 
+                    $addCardId['time2beg'] . $addCardId['time2end'] .
+                    $addCardId['time3beg'] . $addCardId['time3end'];
+                $hexStr .= '00';   // Filler
+                $hexStr .= '01';   // 01 Independent Count 00 Total Count
+                $hexStr .= $addCardId['countDay'] . $addCardId['countMonth']; // Number of access allowed per day/month
+                $hexStr .= '00000000'; //Filler
+                $hexStr .= $addCardId['countZone1'] . $addCardId['countZone2'] .$addCardId['countZone3'];
+
+
                 break;
             default:
                 $this->debug("Error unable to find command ".$cmd);
