@@ -29,7 +29,16 @@ $a->setSn("");
 $usrInfo = [
     'cardid' => '',
     'beg' => '20190522',
-    'end' => '20200522'
+    'end' => '20200522',
+    // Leave it default if you do not have a Time Access Rule Index
+    // Rule Index for Door 1
+    'ta1' => '01', //Time Access rule index. Index starts from 2 - 254  0x02 ~ 0xFE
+    // Rule Index for Door 2
+    'ta2' => '01',
+    // Rule Index for Door 3
+    'ta3' => '01',
+    // Rule Index for Door 4
+    'ta4' => '01',
 ];
 
 /*

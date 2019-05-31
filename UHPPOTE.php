@@ -15,8 +15,8 @@ class uhppote {
       'get_recordIndex'   => 0xb4,  // Get Swipe Records Index
       'set_recordIndex'   => 0xb2,  // Set Swipe Records Index
       'get_records'       => 0xb0,  // Get Swipe Records from Index + 1
-      'set_ripp'          => 0x90,  //Remote Event receiver IP and port
-      'get_ripp'          => 0x92,  //Remote Event receiver IP and port
+      'set_ripp'          => 0x90,  // Remote Event receiver IP and port
+      'get_ripp'          => 0x92,  // Remote Event receiver IP and port
       'get_auth_rec'      => 0x58,  // Get Number of authorized record
       'get_auth'          => 0x5A,  // Get/Check Authorizations
       'add_auth'          => 0x50,  // Add/Edit Authorization return true = success false = failed
@@ -25,14 +25,14 @@ class uhppote {
       'door_delay'        => 0x80,  // Set Door Delay seconds
       'door_delay_get'    => 0x82,  // Get Door Delay seconds
       'userid'            => 0x5C,  // User ID is like memory slot of system
-      'set_timeAccess'    => 0x88,  // Set Access by weekday/time
+      'set_timeAccess'    => 0x88,  // Set Access by weekday/time 2-255  0x02-0xFF
       'get_timeAccess'    => 0x98,  // Get weekday/time access settings
     );
 
     private $ymd_mask = array(
-      'month'   => 0x0f,        //Masking last 4 bits
+      'month'   => 0x0f,          //Masking last 4 bits
       'day'     => 0x1f,          //Masking last 5 bits
-      'minute'  => 0x3f,       //Masking last 6 bits
+      'minute'  => 0x3f,          //Masking last 6 bits
       'second'  => 0x1f,
     );
 
@@ -395,8 +395,123 @@ class uhppote {
                   'swipeymdhms'    => $swipeymdhmsFormated,
                   'rType'   => $rType,
                 );
-                break;                
+                break;
 
+            case $this->command['set_timeAccess']:
+                $state=substr($receive,$index,2);
+                $index+=2;
+
+                if($state == '01') {
+                    $this->debug("Timer set success");
+                } else {
+                    $this->debug("Error: unable to set timer '$state'");
+                }
+
+                break;
+            case $this->command['get_timeAccess']:
+                $gt_index = substr($receive,$index,2);
+                $index+=2;
+                
+                $gt_begDate = substr($receive,$index,8);
+                $index+=8;
+                $gt_endDate = substr($receive,$index,8);
+                $index+=8;
+
+                $gt_week1 = substr($receive,$index,2);
+                $index+=2;
+
+                $gt_week2 = substr($receive,$index,2);
+                $index+=2;
+
+                $gt_week3 = substr($receive,$index,2);
+                $index+=2;
+
+                $gt_week4 = substr($receive,$index,2);
+                $index+=2;
+
+                $gt_week5 = substr($receive,$index,2);
+                $index+=2;
+
+                $gt_week6 = substr($receive,$index,2);
+                $index+=2;
+
+                $gt_week7 = substr($receive,$index,2);
+                $index+=2;
+
+                $gt_tzBeg1 = substr($receive,$index,4);
+                $index+=4;
+                $gt_tzEnd1 = substr($receive,$index,4);
+                $index+=4;
+
+                $gt_tzBeg2 = substr($receive,$index,4);
+                $index+=4;
+                $gt_tzEnd2 = substr($receive,$index,4);
+                $index+=4;
+
+                $gt_tzBeg3 = substr($receive,$index,4);
+                $index+=4;
+
+                $gt_tzEnd3 = substr($receive,$index,4);
+                $index+=4;
+
+                $gt_chain = substr($receive,$index,2);
+                $index+=2;
+
+                $gt_countType = substr($receive,$index,2);
+                $index+=2;
+
+                $gt_countDate = substr($receive,$index,2);
+                $index+=2;
+
+                $gt_countMonth = substr($receive,$index,2);
+                $index+=2;
+
+                $gt_filler = substr($receive,$index,8);
+                $index+=8;
+
+                $gt_zone1 = substr($receive,$index,2);
+                $index+=2;
+
+                $gt_zone2 = substr($receive,$index,2);
+                $index+=2;
+
+                $gt_zone3 = substr($receive,$index,2);
+                $index+=2;
+
+                $gt_weekend = substr($receive,$index,2);
+                $index+=2;
+
+                $ret = [
+                    "index" => $gt_index,
+
+                    "beg" => $gt_begDate,
+                    "end" => $gt_endDate,
+
+                    "w1" => $gt_week1,
+                    "w2" => $gt_week2,
+                    "w3" => $gt_week3,
+                    "w4" => $gt_week4,
+                    "w5" => $gt_week5,
+                    "w6" => $gt_week6,
+                    "w7" => $gt_week7,
+
+                    "time1beg" => $gt_tzBeg1,
+                    "time1end" => $gt_tzEnd1,
+                    "time2beg" => $gt_tzBeg2,
+                    "time2end" => $gt_tzEnd2,
+                    "time3beg" => $gt_tzBeg3,
+                    "time3end" => $gt_tzEnd3,
+
+                    "countType"  => $gt_countType,
+                    "countDay"   => $gt_countDate,
+                    "countMonth" => $gt_countMonth,
+                    "countZone1" => $gt_zone1,
+                    "countZone2" => $gt_zone2,
+                    "countZone3" => $gt_zone3,
+                    "weekend" => $gt_weekend
+                ];
+                
+                break;
             default:
                 $this->debug("Error: unable to process command. Unknown. ".$cmd );
                 break;
@@ -536,7 +651,15 @@ class uhppote {
                     }
                     $hexStr .= $this->reverseByte($b);
                     $hexStr .= $addCardId['beg'] . $addCardId['end'];
-                    $hexStr .= '01010101'; //Currently set all door available.
+                    // Rule Index for Door 1
+                    $hexStr .= isset($addCardId['ta1'])? $addCardId['ta1']: '01'; // default to allow all
+                    // Rule Index for Door 2
+                    $hexStr .= isset($addCardId['ta2'])? $addCardId['ta2']: '01';
+                    // Rule Index for Door 3
+                    $hexStr .= isset($addCardId['ta3'])? $addCardId['ta3']: '01';
+                    // Rule Index for Door 4
+                    $hexStr .= isset($addCardId['ta4'])? $addCardId['ta4']: '01';
+//                    $hexStr .= '01010101'; //Currently set all door available.
                 }
 
                 break;
@@ -600,8 +723,11 @@ class uhppote {
 
                 /**
                  * addCardId
+                 *
+                 * ['index']  2-255   0x02  - 0xFF
                  * ['beg']    : beginning Year Month Day : 20190120
                  * ['end']    : end Year Month Day       : 20200120
+                 *
                  * ['w1']     : Monday                   : '00' = not allowed, '01' = allowed
                  * ['w2']     : Tuesday                  : '00' = not allowed, '01' = allowed
                  * ['w3']     : Wedsday                  : '00' = not allowed, '01' = allowed
@@ -609,35 +735,80 @@ class uhppote {
                  * ['w5']     : Friday                   : '00' = not allowed, '01' = allowed
                  * ['w6']     : Saturday                 : '00' = not allowed, '01' = allowed
                  * ['w7']     : Sunday                   : '00' = not allowed, '01' = allowed
+                 *
                  * ['time1beg'] : Slot 1 Beginning time  : 00:00 midnight    = '0000' Initial time
                  * ['time1end'] : Slot 1 Ending time     : 23:59 end of day  = '2359' Max end time
                  * ['time2beg'] : Slot 2 Beginning time
                  * ['time2end'] : Slot 2 Ending time
                  * ['time3beg'] : Slot 3 Beginning time
                  * ['time3end'] : Slot 3 Ending time
-                 * ['countDay'] : Total Allowed Access count per day       : '00' unlimited, '10' 10 access allowed per day
-                 * ['countMonth'] : Total Allowed Access count per month   : '00' unlimited, '10' 10 access allowed per month
-                 * ['countZone1'] : Total Allowed Access for zone 1        : '00' unlimited
+                 *
+                 * ['countDay']   : Total Allowed Access count per day
+                 *                : '00' unlimited, '10' 10 access allowed per day
+                 * ['countMonth'] : Total Allowed Access count per month
+                 *                : '00' unlimited, '10' 10 access allowed per month
+                 * ['countZone1'] : Total Allowed Access for zone 1
+                 *                : '00' unlimited
                  * ['countZone2'] : Total Allowed Access for zone 2       
                  * ['countZone3'] : Total Allowed Access for zone 3
-                 * ['weekend']    : Weekend Access control              : '00' allowed over weekend '01' deny over weekend
+                 * ['weekend']    : Weekend Access control
+                 *                : '00' allowed over weekend '01' deny over weekend
+                 * Ex:  This can be used as template
+                 timeControl = [
+                    "index" => '02',
+
+                    "beg" => '20190524',
+                    "end" => '20190524',
+
+                    "w1" => '01',
+                    "w2" => '01',
+                    "w3" => '01',
+                    "w4" => '01',
+                    "w5" => '01',
+                    "w6" => '01',
+                    "w7" => '01',
+
+                    "time1beg"   => '1600',
+                    "time1end"   => '2359',
+                    "time2beg"   => '0000',
+                    "time2end"   => '0000',
+                    "time3beg"   => '0000',
+                    "time3end"   => '0000',
+
+                    "countType"  => '01',
+                    "countDay"   => '00',
+                    "countMonth" => '00',
+                    "countZone1" => '00',
+                    "countZone2" => '00',
+                    "countZone3" => '00',
+                    "weekend"    => '00',
+                 ];
+                 *
+                 *
+                 *
+                 *
                  */
             case 'set_timeAccess':
                 $hexStr .= $this->sn;   // Add Serial Number
-                $hexStr .= '01';           // Index to be modified
-                $hexStr .= '01';            // Beg Date
-                $hexStr .= '01';            // End Date
+                $hexStr .= $addCardId['index'];           // Index to be modified
+                $hexStr .= $addCardId['beg'] . $addCardId['end'];    // Beg Date & End Date
                 $hexStr .= $addCardId['w1'] . $addCardId['w2'] . $addCardId['w3'] . $addCardId['w4']. 
                     $addCardId['w5'] . $addCardId['w6'] . $addCardId['w7'];
                 $hexStr .= $addCardId['time1beg'] . $addCardId['time1end'] . 
                     $addCardId['time2beg'] . $addCardId['time2end'] .
                     $addCardId['time3beg'] . $addCardId['time3end'];
                 $hexStr .= '00';   // Filler
-                $hexStr .= '01';   // 01 Independent Count 00 Total Count
+                $hexStr .= $addCardId['countType'];   // 01 Independent Count 00 Total Count
                 $hexStr .= $addCardId['countDay'] . $addCardId['countMonth']; // Number of access allowed per day/month
                 $hexStr .= '00000000'; //Filler
                 $hexStr .= $addCardId['countZone1'] . $addCardId['countZone2'] .$addCardId['countZone3'];
+                $hexStr .= $addCardId['weekend'];
 
+                break;
+
+            case 'get_timeAccess':
+                $hexStr .= $this->sn;   // Add Serial Number
+                $hexStr .= $addCardId['index'];
 
                 break;
             default:
@@ -755,6 +926,11 @@ class uhppote {
         $this->sn = $this->reverseByte($sn);
     }
 
+    public function printCMD($cmd)
+    {
+        $cmd = implode(' ',str_split($cmd,2));
+        $this->debug($cmd);
+    }
 
 }
 
