@@ -9,6 +9,7 @@ CarbonSphere@gmail.com
 
 This is a Network Communication Class for door controller board.
 UHPPOTE door controller, Weigand Access Control system. 微耕門禁開源
+Supported Firmware Version V6.56+
 
 # Donation Address
 
@@ -24,7 +25,9 @@ UHPPOTE door controller, Weigand Access Control system. 微耕門禁開源
     > door_delay/door_delay_get    //Set/Get Door Delay
     > open_door            //Open Door
     > add_auth/del_auth    //Add/Delete Card ID
-    > set_time/get_time    //Get/Set Time
+
+    // Untested function. If you have any questions, then email me. 
+    > set_timeAccess/get_timeAccess    //Get/Set Timer, Allows each card id to be limited access at certain time frame.
 
 # Example Codes
     > example.php -> Gets Remote Monitoring IP/Port of board
@@ -33,6 +36,7 @@ UHPPOTE door controller, Weigand Access Control system. 微耕門禁開源
     > monitor.php -> Monitor events from the board
     > add-user-example.php -> Add user
     > del-user-example.php -> Dete user
+    > timer-example.php -> add Timer Index
 
 # Run Example
 ```console

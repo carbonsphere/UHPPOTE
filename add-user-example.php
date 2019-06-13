@@ -31,6 +31,11 @@ $usrInfo = [
     'beg' => '20190522',
     'end' => '20200522',
     // Leave it default if you do not have a Time Access Rule Index
+    // 00: No Access
+    // 01: Allow access
+    //
+    // 2-254 Timer index
+    //
     // Rule Index for Door 1
     'ta1' => '01', //Time Access rule index. Index starts from 2 - 254  0x02 ~ 0xFE
     // Rule Index for Door 2

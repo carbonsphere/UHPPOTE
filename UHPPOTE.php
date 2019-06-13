@@ -25,6 +25,9 @@ class uhppote {
       'door_delay'        => 0x80,  // Set Door Delay seconds
       'door_delay_get'    => 0x82,  // Get Door Delay seconds
       'userid'            => 0x5C,  // User ID is like memory slot of system
+      // New un-Tested function
+      // Clock Timer for Card Id. Each Timer can have 3 different access timeframe.
+      // Each timer can be attached to card id.
       'set_timeAccess'    => 0x88,  // Set Access by weekday/time 2-255  0x02-0xFF
       'get_timeAccess'    => 0x98,  // Get weekday/time access settings
     );
