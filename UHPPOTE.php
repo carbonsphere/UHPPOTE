@@ -25,11 +25,15 @@ class uhppote {
       'door_delay'        => 0x80,  // Set Door Delay seconds
       'door_delay_get'    => 0x82,  // Get Door Delay seconds
       'userid'            => 0x5C,  // User ID is like memory slot of system
-      // New un-Tested function
       // Clock Timer for Card Id. Each Timer can have 3 different access timeframe.
       // Each timer can be attached to card id.
       'set_timeAccess'    => 0x88,  // Set Access by weekday/time 2-255  0x02-0xFF
       'get_timeAccess'    => 0x98,  // Get weekday/time access settings
+      'set_superPass'     => 0x8C,  // Set Super Password
+      'keypad_switch'     => 0xA4,  // Enable and disable keypad 1~4
+      'interlock'         => 0xA2,  // Set Door interlocking pattern
+      'reset_alarm'       => 0xC0,  // Reset Alarm event
+      'get_alarm_state'   => 0xC2,  // Get Alarm State
     );
 
     private $ymd_mask = array(
@@ -148,6 +152,12 @@ class uhppote {
             case $this->command['del_auth_all']:
             case $this->command['del_auth']:
             case $this->command['add_auth']:
+            case $this->command['set_superPass']:
+            case $this->command['keypad_switch']:
+            case $this->command['interlock']:
+            case $this->command['reset_alarm']:
+            case $this->command['set_recordIndex']:
+
                 $status=substr($receive,$index,2);
                 $index+=2;
                 if($status == '01') {
@@ -339,17 +349,7 @@ class uhppote {
                 );
 
                 break;
-            /*
-             * Process Set Record Index return
-             */
-            case $this->command['set_recordIndex']:
-                $recIndex=hexdec($this->reverseByte(substr($receive,$index,8)));
-                $index+=8;
 
-                $ret = array(
-                  'status' => ($recIndex?"Success":"Failed")
-                );
-                break;
             /*
              * Get Current Record Index
              */
@@ -687,6 +687,7 @@ class uhppote {
             case 'get_time':            // Get Device Time
             case 'dev_status':          // Get Device Status
             case 'get_auth_rec':        // Get Auth Record
+            case 'get_alarm_state':        // Get Alarm State
                 $hexStr .= $this->sn;   // Add Serial Number
                 break;
             case 'get_auth':
@@ -814,6 +815,59 @@ class uhppote {
                 $hexStr .= $addCardId['index'];
 
                 break;
+
+
+            case 'set_superPass':
+                $hexStr .= $this->sn;   // Add Serial Number
+
+                // 1 byte door index  '01': door 1    '02': door 2  '03': door 3   '04': door 4
+                $hexStr .= $addCardId['doorIndex'];
+
+                $hexStr .= '000000';    // Add 3 byte spacer
+
+                // 4 byte Super password
+                $hexStr .= $this->reverseByte(sprintf("%08X", $addCardId['spassword1']));
+                // 4 byte Super password
+                $hexStr .= $this->reverseByte(sprintf("%08X", $addCardId['spassword2']));
+                // 4 byte Super password
+                $hexStr .= $this->reverseByte(sprintf("%08X", $addCardId['spassword3']));
+                // 4 byte Super password
+                $hexStr .= $this->reverseByte(sprintf("%08X", $addCardId['spassword4']));
+
+                break;
+
+            case 'keypad_switch':
+
+                $hexStr .= $this->sn;   // Add Serial Number
+
+                //  '00' disable keypad    '01' enable keypad
+                $hexStr .= $addCardId['pad1'];
+                $hexStr .= $addCardId['pad2'];
+                $hexStr .= $addCardId['pad3'];
+                $hexStr .= $addCardId['pad4'];
+
+                break;
+
+            case 'interlock':
+                $hexStr .= $this->sn;   // Add Serial Number
+
+                /* 1 byte interlock pattern
+                '00' no interlock
+                '01' 1,2 door interlock
+                '02' 3,4 door interlock
+                '03' pair lock for (1,2) (3,4)
+                '04' 1,2,3 door interlock
+                '08' 1,2,3,4 door interlock
+                 */
+                $hexStr .= $addCardId['interlock'];
+
+                break;
+
+            case 'reset_alarm':
+                $hexStr .= $this->sn;   // Add Serial Number
+
+                break;
+
             default:
                 $this->debug("Error unable to find command ".$cmd);
                 break;

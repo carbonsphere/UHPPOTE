@@ -25,8 +25,6 @@ Supported Firmware Version V6.56+
     > door_delay/door_delay_get    //Set/Get Door Delay
     > open_door            //Open Door
     > add_auth/del_auth    //Add/Delete Card ID
-
-    // Untested function. If you have any questions, then email me. 
     > set_timeAccess/get_timeAccess    //Get/Set Timer, Allows each card id to be limited access at certain time frame.
 
 # Example Codes
@@ -37,6 +35,7 @@ Supported Firmware Version V6.56+
     > add-user-example.php -> Add user
     > del-user-example.php -> Dete user
     > timer-example.php -> add Timer Index
+    > set-super-password-example.php
 
 # Run Example
 ```console
