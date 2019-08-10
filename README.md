@@ -26,6 +26,7 @@ Supported Firmware Version V6.56+
     > open_door            //Open Door
     > add_auth/del_auth    //Add/Delete Card ID
     > set_timeAccess/get_timeAccess    //Get/Set Timer, Allows each card id to be limited access at certain time frame.
+    > set_superPass        // Set super passwords
 
 # Example Codes
     > example.php -> Gets Remote Monitoring IP/Port of board
