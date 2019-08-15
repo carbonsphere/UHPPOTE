@@ -47,6 +47,7 @@ $timer = [
     "time3beg" => '0000',
     "time3end" => '0000',
 
+    "countType" => '00'
     "countDay" => '00',
     "countMonth" => '00',
     "countZone1" => '00',
@@ -58,7 +59,7 @@ $timer = [
 /*
  * Get Record Index from Command from UHPPOTE Class
  */
-$cmd = $a->getCmdHex('add_auth',null,$timer);
+$cmd = $a->getCmdHex('set_timeAccess',null,$timer);
 
 echo "Send the folling command to network\n";
 $a->printCMD($cmd);
