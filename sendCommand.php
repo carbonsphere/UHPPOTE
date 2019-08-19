@@ -1,12 +1,18 @@
 <?php
-include "UHPPOTEcvs.php";
+include "UHPPOTE.php";
 
-// configure parameters
+// check for valid command line
 $cardip = $argv[1];
 $cardsn = $argv[2];
+$command = $argv[3];
+if ($cardip == "help" || !$argv[1] || !$argv[2] || !$argv[3]) {
+  $command = "help";
+}
+
+// configure parameters
 $data = null;
 $dt=null;
-switch($argv[3]) {
+switch($command) {
   // no parameters required:
   case "get_time":
   case "dev_status":
@@ -46,8 +52,15 @@ switch($argv[3]) {
               'ta4' => '01',
             ];
     break;
+  case "help":
+    showHelp();
+    exit(0);
+    break;
   default:
+    echo "\n";
     echo "Command not recognised: " . $argv[3] . "\n";
+    showHelp();
+    exit(1);
     break;
 }
   
@@ -135,6 +148,35 @@ function getReturnPacket($sock)
     die("Receive socket Error: [$errorcode] $errormsg \n");
   }
   return $reply;
+}
+
+function showHelp()
+{
+  echo "\n";
+  echo "Usage: \n";
+  echo "\n";
+  echo "php -f sendCommand.php <ip address> <serial> <command> [options]\n";
+  echo "\n";
+  echo "\n";
+  echo "Commands:\n";
+  echo "\n";
+  echo "get_time -- No parameters required.\n";
+  echo "dev_status -- No parameters required.\n";
+  echo "get_auth_rec -- No parameters required.\n";
+  echo "get_record_index -- No parameters required.\n";
+  echo "get_ripp -- No parameters required.\n";
+  echo "del_auth_all -- No parameters required.\n";
+  echo "search -- No parameters required.\n";
+  echo "open_door <door number> -- Example: 03\n";
+  echo "door_delay_get <door number> -- Example: 03\n";
+  echo "set_time\n";
+  echo "get_auth\n";
+  echo "set_ripp\n";
+  echo "door_delay\n";
+  echo "del_auth \n";
+  echo "add_auth \n";
+  echo "help -- Shows this information\n";
+  echo "\n";
 }
 
 ?>
