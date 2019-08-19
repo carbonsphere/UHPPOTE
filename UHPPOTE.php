@@ -709,7 +709,7 @@ class uhppote {
                 break;
             case 'open_door':
                 $hexStr .= $this->sn;   // Add Serial Number
-                $hexStr .= $addCardId['door'];        // Add Door Number 01 02 03 04
+                $hexStr .= (isset($addCardId['door']) ? $addCardId['door'] : '01');        // Add Door Number 01 02 03 04
                 $this->debug("Open Door");
                 break;
             case 'set_recordIndex':
