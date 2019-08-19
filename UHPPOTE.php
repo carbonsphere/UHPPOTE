@@ -540,7 +540,7 @@ class uhppote {
      * @param \DateTime $dt
      * @return string
      */
-    public function getCmdHex($cmd,$dt=null,$addCardId=null) {
+    public function getCmdHex($cmd,$dt=null,$param=null) {
         //Search doesn't need serial number
         if($cmd != 'search') {
             $this->chkSerialNumber();
@@ -553,8 +553,8 @@ class uhppote {
         switch($cmd) {
             case 'userid':                  // Get Device's user id memory slot permission
                 $hexStr .= $this->sn;   // Add Serial Number
-                if(isset($addCardId['userid'])) {
-                    $id = $addCardId['userid'];
+                if(isset($param['userid'])) {
+                    $id = $param['userid'];
                     $idstr = $this->reverseByte(sprintf("%08X",$id));
                     $hexStr .= $idstr;
                 }
@@ -563,18 +563,18 @@ class uhppote {
                 break;
             case 'set_ip':                  // Set Device's IP Info
                 $hexStr .= $this->sn;   // Add Serial Number
-                if(isset($addCardId['ip'])) {
-                    $ip = $addCardId['ip'];
+                if(isset($param['ip'])) {
+                    $ip = $param['ip'];
                     $ipex = explode('.',$ip);
                     $ip = implode('',array_map(function($el){return sprintf("%02X",intval($el));},$ipex));
                     $hexStr .= $ip;
 
-                    $mask = $addCardId['mask'];
+                    $mask = $param['mask'];
                     $maskex = explode('.',$mask);
                     $mask = implode('',array_map(function($el){return sprintf("%02X",intval($el));},$maskex));
                     $hexStr .= $mask;
 
-                    $gate = $addCardId['gate'];
+                    $gate = $param['gate'];
                     $gateex = explode('.',$gate);
                     $gate = implode('',array_map(function($el){return sprintf("%02X",intval($el));},$gateex));
                     $hexStr .= $gate;
@@ -589,32 +589,32 @@ class uhppote {
             case 'set_ripp':
                 $hexStr .= $this->sn;   // Add Serial Number
 
-                if(isset($addCardId['ip'])) {
-                    $ip = $addCardId['ip'];
+                if(isset($param['ip'])) {
+                    $ip = $param['ip'];
                     $ipex = explode('.',$ip);
                     $ipf = '';
                     foreach($ipex as $e ){
                         $ipf .= sprintf("%02X",intval($e));
                     }
-                    $port = sprintf("%04X",$addCardId['port']);
+                    $port = sprintf("%04X",$param['port']);
                     $hexStr .= $ipf . $this->reverseByte($port);
-                    $hexStr .= sprintf("%02X",$addCardId['sec']);
+                    $hexStr .= sprintf("%02X",$param['sec']);
                 }
 
 
                 break;
             case 'door_delay_get':  // Gets Door Delay seconds
                 $hexStr .= $this->sn;   // Add Serial Number
-                if(isset($addCardId['door'])) {
-                    $hexStr .= $addCardId['door'];
+                if(isset($param['door'])) {
+                    $hexStr .= $param['door'];
                 }
                 break;
             case 'door_delay':
                 $hexStr .= $this->sn;   // Add Serial Number
 
-                if(isset($addCardId['seconds'])) {
-                    $sec = sprintf("%02X",$addCardId['seconds']);
-                    $hexStr .= $addCardId['door'];
+                if(isset($param['seconds'])) {
+                    $sec = sprintf("%02X",$param['seconds']);
+                    $hexStr .= $param['door'];
                     $hexStr .= '03';
                     $hexStr .= $sec;
                 }
@@ -626,8 +626,8 @@ class uhppote {
                 break;
             case 'del_auth':
                 $hexStr .= $this->sn;   // Add Serial Number
-                if(isset($addCardId['cardid'])) {
-                    $b = base_convert($addCardId['cardid'],10,16);
+                if(isset($param['cardid'])) {
+                    $b = base_convert($param['cardid'],10,16);
                     $c = strlen($b);
                     for($i=8-$c; $i > 0; $i--) {
                         $b = '0' . $b;
@@ -638,30 +638,30 @@ class uhppote {
                 break;
 
             /*
-             * addCardId['beg']  Beginning date of auth period
-             * addCardId['end']  End date of auth period
+             * param['beg']  Beginning date of auth period
+             * param['end']  End date of auth period
              * beg/end format [ year month day ]
              * Ex: 2000 01 01   "20000101" year 2000 jan 1st
              * Max End date "20291231"  2029 Dec 31st
              */
             case 'add_auth':                        // Add/Edit Card ID
                 $hexStr .= $this->sn;   // Add Serial Number
-                if(isset($addCardId['cardid'])) {
-                    $b = base_convert($addCardId['cardid'],10,16);
+                if(isset($param['cardid'])) {
+                    $b = base_convert($param['cardid'],10,16);
                     $c = strlen($b);
                     for($i=8-$c; $i > 0; $i--) {
                         $b = '0' . $b;
                     }
                     $hexStr .= $this->reverseByte($b);
-                    $hexStr .= $addCardId['beg'] . $addCardId['end'];
+                    $hexStr .= $param['beg'] . $param['end'];
                     // Rule Index for Door 1
-                    $hexStr .= isset($addCardId['ta1'])? $addCardId['ta1']: '01'; // default to allow all
+                    $hexStr .= isset($param['ta1'])? $param['ta1']: '01'; // default to allow all
                     // Rule Index for Door 2
-                    $hexStr .= isset($addCardId['ta2'])? $addCardId['ta2']: '01';
+                    $hexStr .= isset($param['ta2'])? $param['ta2']: '01';
                     // Rule Index for Door 3
-                    $hexStr .= isset($addCardId['ta3'])? $addCardId['ta3']: '01';
+                    $hexStr .= isset($param['ta3'])? $param['ta3']: '01';
                     // Rule Index for Door 4
-                    $hexStr .= isset($addCardId['ta4'])? $addCardId['ta4']: '01';
+                    $hexStr .= isset($param['ta4'])? $param['ta4']: '01';
 //                    $hexStr .= '01010101'; //Currently set all door available.
                 }
 
@@ -692,12 +692,12 @@ class uhppote {
                 break;
             case 'get_auth':
                 $hexStr .= $this->sn;   // Add Serial Number
-                if(isset($addCardId['cardid'])) {
-                    if($addCardId['cardid'] == 0 || $addCardId['cardid'] == 4294967295 ||  $addCardId['cardid'] >= 4294967040) {
-                        $this->debug("Error: invalid ID " . $addCardId['cardid']);
+                if(isset($param['cardid'])) {
+                    if($param['cardid'] == 0 || $param['cardid'] == 4294967295 ||  $param['cardid'] >= 4294967040) {
+                        $this->debug("Error: invalid ID " . $param['cardid']);
                         break;
                     }
-                    $cardidHex = base_convert($addCardId['cardid'], 10, 16);
+                    $cardidHex = base_convert($param['cardid'], 10, 16);
                     $c = strlen($cardidHex);
                     for ($i = 8 - $c; $i > 0; $i--) {
                         $cardidHex = '0' . $cardidHex;
@@ -709,7 +709,7 @@ class uhppote {
                 break;
             case 'open_door':
                 $hexStr .= $this->sn;   // Add Serial Number
-                $hexStr .= '01';        // Add Door Number 01 02 03 04
+                $hexStr .= (isset($param['door']) ? $param['door'] : '01');        // Add Door Number 01 02 03 04
                 $this->debug("Open Door");
                 break;
             case 'set_recordIndex':
@@ -726,7 +726,7 @@ class uhppote {
                 break;
 
                 /**
-                 * addCardId
+                 * param
                  *
                  * ['index']  2-255   0x02  - 0xFF
                  * ['beg']    : beginning Year Month Day : 20190120
@@ -794,25 +794,25 @@ class uhppote {
                  */
             case 'set_timeAccess':
                 $hexStr .= $this->sn;   // Add Serial Number
-                $hexStr .= $addCardId['index'];           // Index to be modified
-                $hexStr .= $addCardId['beg'] . $addCardId['end'];    // Beg Date & End Date
-                $hexStr .= $addCardId['w1'] . $addCardId['w2'] . $addCardId['w3'] . $addCardId['w4']. 
-                    $addCardId['w5'] . $addCardId['w6'] . $addCardId['w7'];
-                $hexStr .= $addCardId['time1beg'] . $addCardId['time1end'] . 
-                    $addCardId['time2beg'] . $addCardId['time2end'] .
-                    $addCardId['time3beg'] . $addCardId['time3end'];
+                $hexStr .= $param['index'];           // Index to be modified
+                $hexStr .= $param['beg'] . $param['end'];    // Beg Date & End Date
+                $hexStr .= $param['w1'] . $param['w2'] . $param['w3'] . $param['w4']. 
+                    $param['w5'] . $param['w6'] . $param['w7'];
+                $hexStr .= $param['time1beg'] . $param['time1end'] . 
+                    $param['time2beg'] . $param['time2end'] .
+                    $param['time3beg'] . $param['time3end'];
                 $hexStr .= '00';   // Filler
-                $hexStr .= $addCardId['countType'];   // 01 Independent Count 00 Total Count
-                $hexStr .= $addCardId['countDay'] . $addCardId['countMonth']; // Number of access allowed per day/month
+                $hexStr .= $param['countType'];   // 01 Independent Count 00 Total Count
+                $hexStr .= $param['countDay'] . $param['countMonth']; // Number of access allowed per day/month
                 $hexStr .= '00000000'; //Filler
-                $hexStr .= $addCardId['countZone1'] . $addCardId['countZone2'] .$addCardId['countZone3'];
-                $hexStr .= $addCardId['weekend'];
+                $hexStr .= $param['countZone1'] . $param['countZone2'] .$param['countZone3'];
+                $hexStr .= $param['weekend'];
 
                 break;
 
             case 'get_timeAccess':
                 $hexStr .= $this->sn;   // Add Serial Number
-                $hexStr .= $addCardId['index'];
+                $hexStr .= $param['index'];
 
                 break;
 
@@ -821,18 +821,18 @@ class uhppote {
                 $hexStr .= $this->sn;   // Add Serial Number
 
                 // 1 byte door index  '01': door 1    '02': door 2  '03': door 3   '04': door 4
-                $hexStr .= $addCardId['doorIndex'];
+                $hexStr .= $param['doorIndex'];
 
                 $hexStr .= '000000';    // Add 3 byte spacer
 
                 // 4 byte Super password
-                $hexStr .= $this->reverseByte(sprintf("%08X", $addCardId['spassword1']));
+                $hexStr .= $this->reverseByte(sprintf("%08X", $param['spassword1']));
                 // 4 byte Super password
-                $hexStr .= $this->reverseByte(sprintf("%08X", $addCardId['spassword2']));
+                $hexStr .= $this->reverseByte(sprintf("%08X", $param['spassword2']));
                 // 4 byte Super password
-                $hexStr .= $this->reverseByte(sprintf("%08X", $addCardId['spassword3']));
+                $hexStr .= $this->reverseByte(sprintf("%08X", $param['spassword3']));
                 // 4 byte Super password
-                $hexStr .= $this->reverseByte(sprintf("%08X", $addCardId['spassword4']));
+                $hexStr .= $this->reverseByte(sprintf("%08X", $param['spassword4']));
 
                 break;
 
@@ -841,10 +841,10 @@ class uhppote {
                 $hexStr .= $this->sn;   // Add Serial Number
 
                 //  '00' disable keypad    '01' enable keypad
-                $hexStr .= $addCardId['pad1'];
-                $hexStr .= $addCardId['pad2'];
-                $hexStr .= $addCardId['pad3'];
-                $hexStr .= $addCardId['pad4'];
+                $hexStr .= $param['pad1'];
+                $hexStr .= $param['pad2'];
+                $hexStr .= $param['pad3'];
+                $hexStr .= $param['pad4'];
 
                 break;
 
@@ -859,7 +859,7 @@ class uhppote {
                 '04' 1,2,3 door interlock
                 '08' 1,2,3,4 door interlock
                  */
-                $hexStr .= $addCardId['interlock'];
+                $hexStr .= $param['interlock'];
 
                 break;
 
