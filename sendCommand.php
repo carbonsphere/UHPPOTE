@@ -168,13 +168,13 @@ function showHelp()
   echo "del_auth_all -- No parameters required.\n";
   echo "search -- No parameters required.\n";
   echo "open_door <door number> -- Example: 03\n";
-  echo "door_delay_get <door number> -- Example: 03\n";
-  echo "set_time\n";
-  echo "get_auth\n";
-  echo "set_ripp\n";
-  echo "door_delay\n";
-  echo "del_auth \n";
-  echo "add_auth \n";
+  echo "door_delay_get <door number> -- Example: 02\n";
+  echo "set_time  -- No parameters required. Uses system time where this command is run.\n";
+  echo "get_auth <cardid> -- Example: 10012345\n";
+  echo "set_ripp <local ip address>\n";
+  echo "door_delay <seconds>\n";
+  echo "del_auth  <cardid> -- Example: 10012345\n";
+  echo "add_auth  <cardid> <YYYYMMDD> <YYYYMMDD> -- Example: 10012345 20190101 20200101\n";
   echo "help -- Shows this information\n";
   echo "\n";
 }
