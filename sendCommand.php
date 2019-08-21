@@ -28,11 +28,11 @@ include "UHPPOTE.php";
 // 'set_recordIndex'   => 0xb2,  // Set Swipe Records Index
 // 'userid'            => 0x5C,  // User ID is like memory slot of system
 // 'keypad_switch'     => 0xA4,  // Enable and disable keypad 1~4
+// 'set_superPass'     => 0x8C,  // Set Super Password
 //
 
 // Not yet implemented:
 // 
-// 'set_superPass'     => 0x8C,  // Set Super Password
 // 
 
 // check for valid command line
@@ -138,6 +138,14 @@ switch($command) {
               'pad2' => $argv[5],
               'pad3' => $argv[6],
               'pad4' => $argv[7]
+            ];
+    break;
+  case "set_superPass":
+    $data = [ 'doorIndex' => $argv[4],
+              'spassword1' => $argv[5],
+              'spassword2' => $argv[6],
+              'spassword3' => $argv[7],
+              'spassword4' => $argv[8]
             ];
     break;
   case "help":
@@ -369,7 +377,7 @@ function showHelp($cmd)
     case 'interlock':
       echo "interlock <pattern>\n";
       echo "\n";
-      echo "Pattern is one of the following:\n";
+      echo "pattern is one of the following:\n";
       echo "  '00' no interlock\n";
       echo "  '01' 1,2 door interlock\n";
       echo "  '02' 3,4 door interlock\n";
@@ -412,6 +420,15 @@ function showHelp($cmd)
       echo "Example (keypad on doors 1 and 3):\n\n";
       echo "php -f sendCommand.php 0.0.0.0 12345678 keypad_switch 01 00 01 00\n\n";
       break;
+    case 'set_superPass':
+      echo "set_superPass <door> <spassword1> <spassword2> <spassword3> <spassword4>\n";
+      echo "\n";
+      echo "door is 01 through 04, and\n";
+      echo "spassword1 through spassword4 are the four bytes of the super password\n";
+      echo "\n";
+      echo "Example:\n\n";
+      echo "php -f sendCommand.php 0.0.0.0 12345678 set_superPass 34 27 18 22\n\n";
+      break;
     default:
       echo "Usage: \n";
       echo "\n";
@@ -428,7 +445,8 @@ function showHelp($cmd)
       echo "del_auth_all, search, open_door, door_delay_get, set_time, get_auth,\n";
       echo "set_ripp, door_delay, del_auth, add_auth, set_timeAccess\n";
       echo "get_timeAccess, set_timeAccess, get_alarm_state, interlock, set_ip,\n";
-      echo "get_records, reset_alarm, set_recordIndex, userid, keypad_switch\n";
+      echo "get_records, reset_alarm, set_recordIndex, userid, keypad_switch,\n";
+      echo "set_superPass\n";
       echo "\n";
       echo "Each command accepts options as needed.\n";
       echo "\n";
