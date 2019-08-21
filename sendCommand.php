@@ -25,11 +25,11 @@ include "UHPPOTE.php";
 // 'set_ip'            => 0x96,  // Set Device IP
 // 'get_records'       => 0xb0,  // Get Swipe Records from Index + 1
 // 'reset_alarm'       => 0xC0,  // Reset Alarm event
+// 'set_recordIndex'   => 0xb2,  // Set Swipe Records Index
 //
 
 // Not yet implemented:
 // 
-// 'set_recordIndex'   => 0xb2,  // Set Swipe Records Index
 // 'userid'            => 0x5C,  // User ID is like memory slot of system
 // 'set_superPass'     => 0x8C,  // Set Super Password
 // 'keypad_switch'     => 0xA4,  // Enable and disable keypad 1~4
@@ -52,7 +52,8 @@ switch($command) {
   case "dev_status":
   case "get_time":
   case "get_auth_rec":
-  case "get_record_index":
+  case "get_recordIndex":
+  case "set_recordIndex":
   case "get_records":
   case "get_ripp":
   case "del_auth_all":
@@ -256,11 +257,17 @@ function showHelp($cmd)
       echo "Example:\n\n";
       echo "php -f sendCommand.php 0.0.0.0 12345678 get_auth_rec\n\n";
       break;
-    case 'get_record_index':
-      echo "get_record_index -- No parameters required.\n";
+    case 'get_recordIndex':
+      echo "get_recordIndex -- No parameters required.\n";
       echo "\n";
       echo "Example:\n\n";
-      echo "php -f sendCommand.php 0.0.0.0 12345678 get_record_index\n\n";
+      echo "php -f sendCommand.php 0.0.0.0 12345678 get_recordIndex\n\n";
+      break;
+    case 'set_recordIndex':
+      echo "set_recordIndex -- No parameters required.\n";
+      echo "\n";
+      echo "Example:\n\n";
+      echo "php -f sendCommand.php 0.0.0.0 12345678 set_recordIndex\n\n";
       break;
     case 'get_ripp':
       echo "get_ripp -- No parameters required.\n";
@@ -393,11 +400,11 @@ function showHelp($cmd)
       echo "\n";
       echo "Commands:\n";
       echo "\n";
-      echo "get_time, dev_status, get_auth_rec, get_record_index, get_ripp,\n";
+      echo "get_time, dev_status, get_auth_rec, get_recordIndex, get_ripp,\n";
       echo "del_auth_all, search, open_door, door_delay_get, set_time, get_auth,\n";
       echo "set_ripp, door_delay, del_auth, add_auth, set_timeAccess\n";
       echo "get_timeAccess, set_timeAccess, get_alarm_state, interlock, set_ip,\n";
-      echo "get_records, reset_alarm\n";
+      echo "get_records, reset_alarm, set_recordIndex\n";
       echo "\n";
       echo "Each command accepts options as needed.\n";
       echo "\n";
