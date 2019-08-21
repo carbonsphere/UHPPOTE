@@ -22,11 +22,11 @@ include "UHPPOTE.php";
 // 'get_timeAccess'    => 0x98,  // Get weekday/time access settings
 // 'get_alarm_state'   => 0xC2,  // Get Alarm State
 // 'interlock'         => 0xA2,  // Set Door interlocking pattern
+// 'set_ip'            => 0x96,  // Set Device IP
 //
 
 // Not yet implemented:
 // 
-// 'set_ip'            => 0x96,  // Set Device IP
 // 'set_recordIndex'   => 0xb2,  // Set Swipe Records Index
 // 'get_records'       => 0xb0,  // Get Swipe Records from Index + 1
 // 'userid'            => 0x5C,  // User ID is like memory slot of system
@@ -86,7 +86,7 @@ switch($command) {
               'ta1' => '01',
               'ta2' => '01',
               'ta3' => '01',
-              'ta4' => '01',
+              'ta4' => '01'
             ];
     break;
   case "set_timeAccess":
@@ -113,11 +113,17 @@ switch($command) {
               'countZone1' => $argv[17],
               'countZone2' => $argv[18],
               'countZone3' => $argv[19],
-              'weekend' => $argv[20],
+              'weekend' => $argv[20]
             ];
     break;
   case "interlock":
     $data = [ 'interlock' => $argv[4] ];
+    break;
+  case "set_ip":
+    $data = [ 'ip' => $argv[4], 
+              'mask' => $argv[5],
+              'gate' => $argv[6]
+            ];
     break;
   case "help":
     $cmd = '';
@@ -353,6 +359,12 @@ function showHelp($cmd)
       echo "Example:\n\n";
       echo "php -f sendCommand.php 0.0.0.0 12345678 interlock 03\n\n";
       break;
+    case 'set_ip':
+      echo "set_ip <ip> <netmask> <gateway>\n";
+      echo "\n";
+      echo "Example:\n\n";
+      echo "php -f sendCommand.php 0.0.0.0 12345678 192.168.1.123 255.255.255.0 192.168.1.1\n\n";
+      break;
    default:
       echo "Usage: \n";
       echo "\n";
@@ -368,7 +380,7 @@ function showHelp($cmd)
       echo "get_time, dev_status, get_auth_rec, get_record_index, get_ripp,\n";
       echo "del_auth_all, search, open_door, door_delay_get, set_time, get_auth,\n";
       echo "set_ripp, door_delay, del_auth, add_auth, set_timeAccess\n";
-      echo "get_timeAccess, set_timeAccess, get_alarm_state, interlock\n";
+      echo "get_timeAccess, set_timeAccess, get_alarm_state, interlock, set_ip\n";
       echo "\n";
       echo "Each command accepts options as needed.\n";
       echo "\n";
