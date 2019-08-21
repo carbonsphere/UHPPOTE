@@ -26,11 +26,11 @@ include "UHPPOTE.php";
 // 'get_records'       => 0xb0,  // Get Swipe Records from Index + 1
 // 'reset_alarm'       => 0xC0,  // Reset Alarm event
 // 'set_recordIndex'   => 0xb2,  // Set Swipe Records Index
+// 'userid'            => 0x5C,  // User ID is like memory slot of system
 //
 
 // Not yet implemented:
 // 
-// 'userid'            => 0x5C,  // User ID is like memory slot of system
 // 'set_superPass'     => 0x8C,  // Set Super Password
 // 'keypad_switch'     => 0xA4,  // Enable and disable keypad 1~4
 // 
@@ -129,6 +129,9 @@ switch($command) {
               'mask' => $argv[5],
               'gate' => $argv[6]
             ];
+    break;
+  case "userid":
+    $data = [ 'userid' => $argv[4] ];
     break;
   case "help":
     $cmd = '';
@@ -387,6 +390,12 @@ function showHelp($cmd)
       echo "\n";
       echo "Example:\n\n";
       echo "php -f sendCommand.php 0.0.0.0 12345678 reset_alarm\n\n";
+      break;
+    case 'userid':
+      echo "userid <userid>\n";
+      echo "\n";
+      echo "Example:\n\n";
+      echo "php -f sendCommand.php 0.0.0.0 12345678 userid 2\n\n";
       break;
    default:
       echo "Usage: \n";
