@@ -85,10 +85,10 @@ switch($command) {
     $data = [ 'cardid' => $argv[4],
               'beg' => $argv[5],
               'end' => $argv[6],
-              'ta1' => '01',
-              'ta2' => '01',
-              'ta3' => '01',
-              'ta4' => '01'
+              'ta1' => $argv[7],
+              'ta2' => $argv[8],
+              'ta3' => $argv[9],
+              'ta4' => $argv[10]
             ];
     break;
   case "get_timeAccess":
@@ -348,10 +348,10 @@ function showHelp($cmd)
       echo "php -f sendCommand.php 0.0.0.0 12345678 del_auth 10012345\n\n";
       break;
     case 'add_auth':
-      echo "add_auth <cardid> <begindate as YYYYMMDD> <enddate as YYYYMMDD>\n";
+      echo "add_auth <cardid> <begindate as YYYYMMDD> <enddate as YYYYMMDD> <door1> <door2> <door3> <door4>\n";
       echo "\n";
-      echo "Example:\n\n";
-      echo "php -f sendCommand.php 0.0.0.0 12345678 10012345 20190101 20200101\n\n";
+      echo "Example (Facility code 100, Card code 12345, From Jan 01, 2019 to Jan 01, 2020, and valid on doors 1, 2, and 4.):\n\n";
+      echo "php -f sendCommand.php 0.0.0.0 12345678 10012345 20190101 20200101 01 01 00 01\n\n";
       break;
     case 'get_timeAccess':
       echo "get_timeAccess <index>\n";
