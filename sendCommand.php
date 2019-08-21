@@ -27,12 +27,12 @@ include "UHPPOTE.php";
 // 'reset_alarm'       => 0xC0,  // Reset Alarm event
 // 'set_recordIndex'   => 0xb2,  // Set Swipe Records Index
 // 'userid'            => 0x5C,  // User ID is like memory slot of system
+// 'keypad_switch'     => 0xA4,  // Enable and disable keypad 1~4
 //
 
 // Not yet implemented:
 // 
 // 'set_superPass'     => 0x8C,  // Set Super Password
-// 'keypad_switch'     => 0xA4,  // Enable and disable keypad 1~4
 // 
 
 // check for valid command line
@@ -132,6 +132,13 @@ switch($command) {
     break;
   case "userid":
     $data = [ 'userid' => $argv[4] ];
+    break;
+  case "keypad_switch":
+    $data = [ 'pad1' => $argv[4],
+              'pad2' => $argv[5],
+              'pad3' => $argv[6],
+              'pad4' => $argv[7]
+            ];
     break;
   case "help":
     $cmd = '';
@@ -397,7 +404,15 @@ function showHelp($cmd)
       echo "Example:\n\n";
       echo "php -f sendCommand.php 0.0.0.0 12345678 userid 2\n\n";
       break;
-   default:
+    case 'keypad_switch':
+      echo "keypad_switch <pad1> <pad2> <pad3> <pad4>\n";
+      echo "\n";
+      echo "pad 1 through pad4 are either 00 for no keypad or 01 for keypad present.\n";
+      echo "\n";
+      echo "Example (keypad on doors 1 and 3):\n\n";
+      echo "php -f sendCommand.php 0.0.0.0 12345678 keypad_switch 01 00 01 00\n\n";
+      break;
+    default:
       echo "Usage: \n";
       echo "\n";
       echo "php -f sendCommand.php <ip address> <serial> <command> [options]\n";
@@ -413,7 +428,7 @@ function showHelp($cmd)
       echo "del_auth_all, search, open_door, door_delay_get, set_time, get_auth,\n";
       echo "set_ripp, door_delay, del_auth, add_auth, set_timeAccess\n";
       echo "get_timeAccess, set_timeAccess, get_alarm_state, interlock, set_ip,\n";
-      echo "get_records, reset_alarm, set_recordIndex\n";
+      echo "get_records, reset_alarm, set_recordIndex, userid, keypad_switch\n";
       echo "\n";
       echo "Each command accepts options as needed.\n";
       echo "\n";
