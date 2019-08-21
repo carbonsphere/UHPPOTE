@@ -56,7 +56,6 @@ switch($command) {
   case "get_records":
   case "get_ripp":
   case "del_auth_all":
-  case "get_timeAccess":
   case "get_alarm_state":
   case "reset_alarm":
   case "search":
@@ -90,6 +89,9 @@ switch($command) {
               'ta3' => '01',
               'ta4' => '01'
             ];
+    break;
+  case "get_timeAccess":
+    $data = [ 'index' => $argv[4] ];
     break;
   case "set_timeAccess":
             $weekday = str_split($argv[7],2);
@@ -327,10 +329,10 @@ function showHelp($cmd)
       echo "php -f sendCommand.php 0.0.0.0 12345678 10012345 20190101 20200101\n\n";
       break;
     case 'get_timeAccess':
-      echo "get_timeAccess -- No parameters required.\n";
+      echo "get_timeAccess <index>\n";
       echo "\n";
       echo "Example:\n\n";
-      echo "php -f sendCommand.php 0.0.0.0 12345678 get_timeAccess\n\n";
+      echo "php -f sendCommand.php 0.0.0.0 12345678 get_timeAccess 02\n\n";
       break;
     case 'set_timeAccess':
       echo "set_timeAccess <index> <begin> <end> <weekday> \ \n";
