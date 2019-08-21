@@ -24,6 +24,7 @@ include "UHPPOTE.php";
 // 'interlock'         => 0xA2,  // Set Door interlocking pattern
 // 'set_ip'            => 0x96,  // Set Device IP
 // 'get_records'       => 0xb0,  // Get Swipe Records from Index + 1
+// 'reset_alarm'       => 0xC0,  // Reset Alarm event
 //
 
 // Not yet implemented:
@@ -32,7 +33,6 @@ include "UHPPOTE.php";
 // 'userid'            => 0x5C,  // User ID is like memory slot of system
 // 'set_superPass'     => 0x8C,  // Set Super Password
 // 'keypad_switch'     => 0xA4,  // Enable and disable keypad 1~4
-// 'reset_alarm'       => 0xC0,  // Reset Alarm event
 // 
 
 // check for valid command line
@@ -58,6 +58,7 @@ switch($command) {
   case "del_auth_all":
   case "get_timeAccess":
   case "get_alarm_state":
+  case "reset_alarm":
   case "search":
     break;
   case "open_door":
@@ -372,6 +373,12 @@ function showHelp($cmd)
       echo "Example:\n\n";
       echo "php -f sendCommand.php 0.0.0.0 12345678 get_records\n\n";
       break;
+    case 'reset_alarm':
+      echo "reset_alarm -- No parameters required.\n";
+      echo "\n";
+      echo "Example:\n\n";
+      echo "php -f sendCommand.php 0.0.0.0 12345678 reset_alarm\n\n";
+      break;
    default:
       echo "Usage: \n";
       echo "\n";
@@ -388,7 +395,7 @@ function showHelp($cmd)
       echo "del_auth_all, search, open_door, door_delay_get, set_time, get_auth,\n";
       echo "set_ripp, door_delay, del_auth, add_auth, set_timeAccess\n";
       echo "get_timeAccess, set_timeAccess, get_alarm_state, interlock, set_ip,\n";
-      echo "get_records\n";
+      echo "get_records, reset_alarm\n";
       echo "\n";
       echo "Each command accepts options as needed.\n";
       echo "\n";
