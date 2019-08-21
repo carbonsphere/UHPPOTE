@@ -1,6 +1,40 @@
 <?php
 include "UHPPOTE.php";
 
+// Implemented:
+//
+// 'dev_status'        => 0x20,
+// 'open_door'         => 0x40,
+// 'set_time'          => 0x30,
+// 'get_time'          => 0x32,
+// 'search'            => 0x94,  // Get Device Serial Number SN
+// 'get_recordIndex'   => 0xb4,  // Get Swipe Records Index
+// 'set_ripp'          => 0x90,  // Remote Event receiver IP and port
+// 'get_ripp'          => 0x92,  // Remote Event receiver IP and port
+// 'get_auth_rec'      => 0x58,  // Get Number of authorized record
+// 'get_auth'          => 0x5A,  // Get/Check Authorizations
+// 'add_auth'          => 0x50,  // Add/Edit Authorization return true = success false = failed
+// 'del_auth'          => 0x52,  // Delete Authorization individual
+// 'del_auth_all'      => 0x54,  // Delete All Authorization
+// 'door_delay'        => 0x80,  // Set Door Delay seconds
+// 'door_delay_get'    => 0x82,  // Get Door Delay seconds
+//
+
+// Not yet implemented:
+// 
+// 'set_ip'            => 0x96,  // Set Device IP
+// 'set_recordIndex'   => 0xb2,  // Set Swipe Records Index
+// 'get_records'       => 0xb0,  // Get Swipe Records from Index + 1
+// 'userid'            => 0x5C,  // User ID is like memory slot of system
+// 'set_timeAccess'    => 0x88,  // Set Access by weekday/time 2-255  0x02-0xFF
+// 'get_timeAccess'    => 0x98,  // Get weekday/time access settings
+// 'set_superPass'     => 0x8C,  // Set Super Password
+// 'keypad_switch'     => 0xA4,  // Enable and disable keypad 1~4
+// 'interlock'         => 0xA2,  // Set Door interlocking pattern
+// 'reset_alarm'       => 0xC0,  // Reset Alarm event
+// 'get_alarm_state'   => 0xC2,  // Get Alarm State
+// 
+
 // check for valid command line
 $cardip = $argv[1];
 $cardsn = $argv[2];
@@ -12,10 +46,11 @@ if ($cardip == "help" || !$argv[1] || !$argv[2] || !$argv[3]) {
 // configure parameters
 $data = null;
 $dt=null;
+
 switch($command) {
   // no parameters required:
-  case "get_time":
   case "dev_status":
+  case "get_time":
   case "get_auth_rec":
   case "get_record_index":
   case "get_ripp":
@@ -52,14 +87,48 @@ switch($command) {
               'ta4' => '01',
             ];
     break;
+  case "set_timeAccess":
+            $weekday = str_split($argv[7],2);
+    $data = [ 'index' => $argv[4],
+              'beg' => $argv[5],
+              'end' => $argv[6],
+              'w1' => $weekday[0],
+              'w2' => $weekday[1],
+              'w3' => $weekday[2],
+              'w4' => $weekday[3],
+              'w5' => $weekday[4],
+              'w6' => $weekday[5],
+              'w7' => $weekday[6],
+              'time1beg' => $argv[8],
+              'time2end' => $argv[9],
+              'time2beg' => $argv[10],
+              'time2end' => $argv[11],
+              'time3beg' => $argv[12],
+              'time3end' => $argv[13],
+              'countType' => $argv[14],
+              'countDay' => $argv[15],
+              'countMonth' => $argv[16],
+              'countZone1' => $argv[17],
+              'countZone2' => $argv[18],
+              'countZone3' => $argv[19],
+              'weekend' => $argv[20],
+            ];
+    break;
   case "help":
-    showHelp();
+    $cmd = '';
+    if ($argv[1] == 'help') {
+      $cmd = $argv[2];
+    }
+    if ($argv[3] == 'help') {
+      $cmd = $argv[4];
+    }    
+    showHelp($cmd);
     exit(0);
     break;
   default:
     echo "\n";
     echo "Command not recognised: " . $argv[3] . "\n";
-    showHelp();
+    showHelp("help");
     exit(1);
     break;
 }
@@ -150,33 +219,132 @@ function getReturnPacket($sock)
   return $reply;
 }
 
-function showHelp()
+function showHelp($cmd)
 {
   echo "\n";
-  echo "Usage: \n";
-  echo "\n";
-  echo "php -f sendCommand.php <ip address> <serial> <command> [options]\n";
-  echo "\n";
-  echo "\n";
-  echo "Commands:\n";
-  echo "\n";
-  echo "get_time -- No parameters required.\n";
-  echo "dev_status -- No parameters required.\n";
-  echo "get_auth_rec -- No parameters required.\n";
-  echo "get_record_index -- No parameters required.\n";
-  echo "get_ripp -- No parameters required.\n";
-  echo "del_auth_all -- No parameters required.\n";
-  echo "search -- No parameters required.\n";
-  echo "open_door <door number> -- Example: 03\n";
-  echo "door_delay_get <door number> -- Example: 02\n";
-  echo "set_time  -- No parameters required. Uses system time where this command is run.\n";
-  echo "get_auth <cardid> -- Example: 10012345\n";
-  echo "set_ripp <local ip address>\n";
-  echo "door_delay <seconds>\n";
-  echo "del_auth  <cardid> -- Example: 10012345\n";
-  echo "add_auth  <cardid> <YYYYMMDD> <YYYYMMDD> -- Example: 10012345 20190101 20200101\n";
-  echo "help -- Shows this information\n";
-  echo "\n";
+  switch($cmd) {
+    case 'get_time':
+      echo "get_time -- No parameters required.\n";
+      echo "\n";
+      echo "Example:\n\n";
+      echo "php -f sendCommand.php 0.0.0.0 12345678 get_time\n\n";
+      break;
+    case 'dev_status':
+      echo "dev_status -- No parameters required.\n";
+      echo "\n";
+      echo "Example:\n\n";
+      echo "php -f sendCommand.php 0.0.0.0 12345678 dev_status\n\n";
+      break;
+    case 'get_auth_rec':
+      echo "get_auth_rec -- No parameters required.\n";
+      echo "\n";
+      echo "Example:\n\n";
+      echo "php -f sendCommand.php 0.0.0.0 12345678 get_auth_rec\n\n";
+      break;
+    case 'get_record_index':
+      echo "get_record_index -- No parameters required.\n";
+      echo "\n";
+      echo "Example:\n\n";
+      echo "php -f sendCommand.php 0.0.0.0 12345678 get_record_index\n\n";
+      break;
+    case 'get_ripp':
+      echo "get_ripp -- No parameters required.\n";
+      echo "\n";
+      echo "Example:\n\n";
+      echo "php -f sendCommand.php 0.0.0.0 12345678 get_ripp\n\n";
+      break;
+    case 'del_auth_all':
+      echo "del_auth_all -- No parameters required.\n";
+      echo "\n";
+      echo "Example:\n\n";
+      echo "php -f sendCommand.php 0.0.0.0 12345678 del_auth_all\n\n";
+      break;
+    case 'search':
+      echo "search -- No parameters required.\n";
+      echo "\n";
+      echo "Example:\n\n";
+      echo "php -f sendCommand.php 0.0.0.0 12345678 search\n\n";
+      break;
+    case 'open_door':
+      echo "open_door <door number>\n";
+      echo "\n";
+      echo "Example:\n\n";
+      echo "php -f sendCommand.php 0.0.0.0 12345678 open_door 03\n\n";
+      break;
+    case 'door_delay_get':
+      echo "door_delay_get <door number>\n";
+      echo "\n";
+      echo "Example:\n\n";
+      echo "php -f sendCommand.php 0.0.0.0 12345678 door_delay_get 02\n\n";
+      break;
+    case 'set_time':
+      echo "set_time -- No parameters required. Uses system time where this command is run.\n";
+      echo "\n";
+      echo "Example:\n\n";
+      echo "php -f sendCommand.php 0.0.0.0 12345678 set_time\n\n";
+      break;
+    case 'get_auth':
+      echo "get_auth <cardid>\n";
+      echo "\n";
+      echo "Example:\n\n";
+      echo "php -f sendCommand.php 0.0.0.0 12345678 get_auth 10012345\n\n";
+      break;
+    case 'set_ripp':
+      echo "set_ripp <local ip address>\n";
+      echo "\n";
+      echo "Example:\n\n";
+      echo "php -f sendCommand.php 0.0.0.0 12345678 set_ripp 192.168.0.10\n\n";
+      break;
+    case 'door_delay':
+      echo "door_delay <seconds>\n";
+      echo "\n";
+      echo "Example:\n\n";
+      echo "php -f sendCommand.php 0.0.0.0 12345678 door_delay 5\n\n";
+      break;
+    case 'del_auth':
+      echo "del_auth <cardid>\n";
+      echo "\n";
+      echo "Example:\n\n";
+      echo "php -f sendCommand.php 0.0.0.0 12345678 del_auth 10012345\n\n";
+      break;
+    case 'add_auth':
+      echo "add_auth <cardid> <begindate as YYYYMMDD> <enddate as YYYYMMDD>\n";
+      echo "\n";
+      echo "Example:\n\n";
+      echo "php -f sendCommand.php 0.0.0.0 12345678 10012345 20190101 20200101\n\n";
+      break;
+    case 'set_timeAccess':
+      echo "set_timeAccess <index> <begin> <end> <weekday> \ \n";
+      echo "  <time1begin> <time1end> <time2begin> <time2end> <time3begin> <time3end> \ \n";
+      echo "  <countType> <countDay> <countMonth> \ \n";
+      echo "  <countZone1> <countZone2> <countZone3> <weekend>\n";
+      echo "\n";
+      echo "Example:\n\n";
+      echo "php -f sendCommand.php 0.0.0.0 12345678 set_timeAccess 02 20190101 20200101 01010101010101 1600 2359 0000 0000 0000 0000 00 00 00 00 00 00 00\n\n";
+      break;
+    default:
+      echo "Usage: \n";
+      echo "\n";
+      echo "php -f sendCommand.php <ip address> <serial> <command> [options]\n";
+      echo "\n";
+      echo "<ip address> is the IP of the board you're addressing.\n";
+      echo "<serial> is the serial number of the board you're addressing. It is the\n";
+      echo "  same as the last 4 octets of the MAC address of the card. It is not the\n";
+      echo "  serial number printed on the top of the card!\n";
+      echo "\n";
+      echo "Commands:\n";
+      echo "\n";
+      echo "get_time, dev_status, get_auth_rec, get_record_index, get_ripp,\n";
+      echo "del_auth_all, search, open_door, door_delay_get, set_time, get_auth,\n";
+      echo "set_ripp, door_delay, del_auth, add_auth, set_timeAccess\n";
+      echo "\n";
+      echo "Each command accepts options as needed.\n";
+      echo "\n";
+      echo "help -- Shows this information\n";
+      echo "\n";
+      echo "help command -- shows command soecific help\n\n";
+      break;
+  }
 }
 
 ?>
