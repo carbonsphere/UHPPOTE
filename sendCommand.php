@@ -20,6 +20,7 @@ include "UHPPOTE.php";
 // 'door_delay_get'    => 0x82,  // Get Door Delay seconds
 // 'set_timeAccess'    => 0x88,  // Set Access by weekday/time 2-255  0x02-0xFF
 // 'get_timeAccess'    => 0x98,  // Get weekday/time access settings
+// 'get_alarm_state'   => 0xC2,  // Get Alarm State
 //
 
 // Not yet implemented:
@@ -32,7 +33,6 @@ include "UHPPOTE.php";
 // 'keypad_switch'     => 0xA4,  // Enable and disable keypad 1~4
 // 'interlock'         => 0xA2,  // Set Door interlocking pattern
 // 'reset_alarm'       => 0xC0,  // Reset Alarm event
-// 'get_alarm_state'   => 0xC2,  // Get Alarm State
 // 
 
 // check for valid command line
@@ -56,6 +56,7 @@ switch($command) {
   case "get_ripp":
   case "del_auth_all":
   case "get_timeAccess":
+  case "get_alarm_state":
   case "search":
     break;
   case "open_door":
@@ -329,7 +330,13 @@ function showHelp($cmd)
       echo "Example:\n\n";
       echo "php -f sendCommand.php 0.0.0.0 12345678 set_timeAccess 02 20190101 20200101 01010101010101 1600 2359 0000 0000 0000 0000 00 00 00 00 00 00 00\n\n";
       break;
-    default:
+    case 'get_alarm_state':
+      echo "get_alarm_state -- No parameters required.\n";
+      echo "\n";
+      echo "Example:\n\n";
+      echo "php -f sendCommand.php 0.0.0.0 12345678 get_alarm_state\n\n";
+      break;
+   default:
       echo "Usage: \n";
       echo "\n";
       echo "php -f sendCommand.php <ip address> <serial> <command> [options]\n";
@@ -344,6 +351,7 @@ function showHelp($cmd)
       echo "get_time, dev_status, get_auth_rec, get_record_index, get_ripp,\n";
       echo "del_auth_all, search, open_door, door_delay_get, set_time, get_auth,\n";
       echo "set_ripp, door_delay, del_auth, add_auth, set_timeAccess\n";
+      echo "get_timeAccess, set_timeAccess, get_alarm_state\n";
       echo "\n";
       echo "Each command accepts options as needed.\n";
       echo "\n";
