@@ -18,6 +18,8 @@ include "UHPPOTE.php";
 // 'del_auth_all'      => 0x54,  // Delete All Authorization
 // 'door_delay'        => 0x80,  // Set Door Delay seconds
 // 'door_delay_get'    => 0x82,  // Get Door Delay seconds
+// 'set_timeAccess'    => 0x88,  // Set Access by weekday/time 2-255  0x02-0xFF
+// 'get_timeAccess'    => 0x98,  // Get weekday/time access settings
 //
 
 // Not yet implemented:
@@ -26,8 +28,6 @@ include "UHPPOTE.php";
 // 'set_recordIndex'   => 0xb2,  // Set Swipe Records Index
 // 'get_records'       => 0xb0,  // Get Swipe Records from Index + 1
 // 'userid'            => 0x5C,  // User ID is like memory slot of system
-// 'set_timeAccess'    => 0x88,  // Set Access by weekday/time 2-255  0x02-0xFF
-// 'get_timeAccess'    => 0x98,  // Get weekday/time access settings
 // 'set_superPass'     => 0x8C,  // Set Super Password
 // 'keypad_switch'     => 0xA4,  // Enable and disable keypad 1~4
 // 'interlock'         => 0xA2,  // Set Door interlocking pattern
@@ -55,6 +55,7 @@ switch($command) {
   case "get_record_index":
   case "get_ripp":
   case "del_auth_all":
+  case "get_timeAccess":
   case "search":
     break;
   case "open_door":
@@ -312,6 +313,12 @@ function showHelp($cmd)
       echo "\n";
       echo "Example:\n\n";
       echo "php -f sendCommand.php 0.0.0.0 12345678 10012345 20190101 20200101\n\n";
+      break;
+      case 'get_timeAccess':
+      echo "get_timeAccess -- No parameters required.\n";
+      echo "\n";
+      echo "Example:\n\n";
+      echo "php -f sendCommand.php 0.0.0.0 12345678 get_timeAccess\n\n";
       break;
     case 'set_timeAccess':
       echo "set_timeAccess <index> <begin> <end> <weekday> \ \n";
