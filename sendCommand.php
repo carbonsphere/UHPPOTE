@@ -21,6 +21,7 @@ include "UHPPOTE.php";
 // 'set_timeAccess'    => 0x88,  // Set Access by weekday/time 2-255  0x02-0xFF
 // 'get_timeAccess'    => 0x98,  // Get weekday/time access settings
 // 'get_alarm_state'   => 0xC2,  // Get Alarm State
+// 'interlock'         => 0xA2,  // Set Door interlocking pattern
 //
 
 // Not yet implemented:
@@ -31,7 +32,6 @@ include "UHPPOTE.php";
 // 'userid'            => 0x5C,  // User ID is like memory slot of system
 // 'set_superPass'     => 0x8C,  // Set Super Password
 // 'keypad_switch'     => 0xA4,  // Enable and disable keypad 1~4
-// 'interlock'         => 0xA2,  // Set Door interlocking pattern
 // 'reset_alarm'       => 0xC0,  // Reset Alarm event
 // 
 
@@ -115,6 +115,9 @@ switch($command) {
               'countZone3' => $argv[19],
               'weekend' => $argv[20],
             ];
+    break;
+  case "interlock":
+    $data = [ 'interlock' => $argv[4] ];
     break;
   case "help":
     $cmd = '';
@@ -315,7 +318,7 @@ function showHelp($cmd)
       echo "Example:\n\n";
       echo "php -f sendCommand.php 0.0.0.0 12345678 10012345 20190101 20200101\n\n";
       break;
-      case 'get_timeAccess':
+    case 'get_timeAccess':
       echo "get_timeAccess -- No parameters required.\n";
       echo "\n";
       echo "Example:\n\n";
@@ -336,6 +339,20 @@ function showHelp($cmd)
       echo "Example:\n\n";
       echo "php -f sendCommand.php 0.0.0.0 12345678 get_alarm_state\n\n";
       break;
+    case 'interlock':
+      echo "interlock <pattern>\n";
+      echo "\n";
+      echo "Pattern is one of the following:\n";
+      echo "  '00' no interlock\n";
+      echo "  '01' 1,2 door interlock\n";
+      echo "  '02' 3,4 door interlock\n";
+      echo "  '03' pair lock for (1,2) (3,4)\n";
+      echo "  '04' 1,2,3 door interlock\n";
+      echo "  '08' 1,2,3,4 door interlock\n";
+      echo "\n";
+      echo "Example:\n\n";
+      echo "php -f sendCommand.php 0.0.0.0 12345678 interlock 03\n\n";
+      break;
    default:
       echo "Usage: \n";
       echo "\n";
@@ -351,7 +368,7 @@ function showHelp($cmd)
       echo "get_time, dev_status, get_auth_rec, get_record_index, get_ripp,\n";
       echo "del_auth_all, search, open_door, door_delay_get, set_time, get_auth,\n";
       echo "set_ripp, door_delay, del_auth, add_auth, set_timeAccess\n";
-      echo "get_timeAccess, set_timeAccess, get_alarm_state\n";
+      echo "get_timeAccess, set_timeAccess, get_alarm_state, interlock\n";
       echo "\n";
       echo "Each command accepts options as needed.\n";
       echo "\n";
