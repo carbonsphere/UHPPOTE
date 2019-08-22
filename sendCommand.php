@@ -1,39 +1,8 @@
 <?php
 include "UHPPOTE.php";
 
-// Implemented:
-//
-// 'dev_status'        => 0x20,
-// 'open_door'         => 0x40,
-// 'set_time'          => 0x30,
-// 'get_time'          => 0x32,
-// 'search'            => 0x94,  // Get Device Serial Number SN
-// 'get_recordIndex'   => 0xb4,  // Get Swipe Records Index
-// 'set_ripp'          => 0x90,  // Remote Event receiver IP and port
-// 'get_ripp'          => 0x92,  // Remote Event receiver IP and port
-// 'get_auth_rec'      => 0x58,  // Get Number of authorized record
-// 'get_auth'          => 0x5A,  // Get/Check Authorizations
-// 'add_auth'          => 0x50,  // Add/Edit Authorization return true = success false = failed
-// 'del_auth'          => 0x52,  // Delete Authorization individual
-// 'del_auth_all'      => 0x54,  // Delete All Authorization
-// 'door_delay'        => 0x80,  // Set Door Delay seconds
-// 'door_delay_get'    => 0x82,  // Get Door Delay seconds
-// 'set_timeAccess'    => 0x88,  // Set Access by weekday/time 2-255  0x02-0xFF
-// 'get_timeAccess'    => 0x98,  // Get weekday/time access settings
-// 'get_alarm_state'   => 0xC2,  // Get Alarm State
-// 'interlock'         => 0xA2,  // Set Door interlocking pattern
-// 'set_ip'            => 0x96,  // Set Device IP
-// 'get_records'       => 0xb0,  // Get Swipe Records from Index + 1
-// 'reset_alarm'       => 0xC0,  // Reset Alarm event
-// 'set_recordIndex'   => 0xb2,  // Set Swipe Records Index
-// 'userid'            => 0x5C,  // User ID is like memory slot of system
-// 'keypad_switch'     => 0xA4,  // Enable and disable keypad 1~4
-// 'set_superPass'     => 0x8C,  // Set Super Password
-//
-
-// Not yet implemented:
-// 
-// 
+$debug = 0; // If enabled optional debug output will be present.
+$tz = 'America/Chicago'; // Set your time zone here. Find it at https://www.php.net/manual/en/timezones.php.
 
 // check for valid command line
 $cardip = $argv[1];
@@ -63,11 +32,11 @@ switch($command) {
     break;
   case "open_door":
   case "door_delay_get":
-    echo "Door: " . $argv[4];
+    if ($debug) echo "Door: " . $argv[4];
     $data = [ 'door' => $argv[4] ];
     break;
   case "set_time":
-    $dt = New DateTime('now', new DateTimeZone('America/Chicago'));
+    $dt = New DateTime('now', new DateTimeZone($tz));
     break;
   case "get_auth":
     $data = [ 'cardid' => $argv[4] ];
@@ -172,14 +141,11 @@ $a = new uhppote();
 $a->setSn($cardsn);
 $ip = $cardip;
 
-#$a->setSn("19395b5e");
-#$a->setSn("19395d30");
-
-print_r($data);
+if ($debug) print_r($data);
 
 $cmd = $a->getCmdHex($argv[3],$dt,$data);
 
-echo "Send the following command to network\n$cmd\n";
+if ($debug) echo "Send the following command to network\n$cmd\n";
 
 $port = 60000;
 
@@ -187,7 +153,6 @@ $sock = createSocket();
 
 $input = hex2bin($cmd);
 
-echo "Sending....\n";
 if( ! socket_sendto($sock, $input , strlen($input) , 0 , $cardip , $port))
 {
   $errorcode = socket_last_error();
@@ -197,36 +162,14 @@ if( ! socket_sendto($sock, $input , strlen($input) , 0 , $cardip , $port))
   exit;
 }
 
-echo "Listening for return status\n";
+if ($debug) echo "Listening for return status\n";
 $reply = getReturnPacket($sock);
 
-echo "Processing return status\n";
+if ($debug) echo "Processing return status\n";
 $procmsg = $a->procCmd(bin2hex($reply));
 
 print_r($procmsg);
 echo "\n";
-
-function getRecord($uhppote,$socket, $recordIndex,$cardip,$port) {
-  $cmd = $uhppote->getCmdHex('get_records',$recordIndex);
-  $input = hex2bin($cmd);
-//  echo "Sending get record $recordIndex....\n";
-  if( ! socket_sendto($socket, $input , strlen($input) , 0 , $cardip , $port))
-  {
-    $errorcode = socket_last_error();
-    $errormsg = socket_strerror($errorcode);
-    die("There is error");
-  }
-  $reply = getReturnPacket($socket);
-//  echo "Processing return $recordIndex status\n";
-  $procmsg = $uhppote->procCmd(bin2hex($reply));
-
-//  echo "Card: " . $procmsg[CardId] . " -- Date/Time: " . $procmsg[swipeymdhms] . " -- Type: " . $procmsg[rType] . " -- Door: " . $procmsg[Door] . " -- Door Stat: " . $procmsg[DoorStat] . "\n";
-  print_r($procmsg);
-
-}
-
-
-
 
 function createSocket() 
 {
@@ -348,7 +291,9 @@ function showHelp($cmd)
       echo "php -f sendCommand.php 0.0.0.0 12345678 del_auth 10012345\n\n";
       break;
     case 'add_auth':
-      echo "add_auth <cardid> <begindate as YYYYMMDD> <enddate as YYYYMMDD> <door1> <door2> <door3> <door4>\n";
+      echo "add_auth <cardid> <begindate as YYYYMMDD> <enddate as YYYYMMDD> [<door1> <door2> <door3> <door4>]\n";
+      echo "\n";
+      echo "door1 through door4 are optional. If excluded access will be added to all doors.\n";
       echo "\n";
       echo "Example (Facility code 100, Card code 12345, From Jan 01, 2019 to Jan 01, 2020, and valid on doors 1, 2, and 4.):\n\n";
       echo "php -f sendCommand.php 0.0.0.0 12345678 10012345 20190101 20200101 01 01 00 01\n\n";
