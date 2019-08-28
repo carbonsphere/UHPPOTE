@@ -28,6 +28,10 @@ Supported Firmware Version V6.56+
     > set_timeAccess/get_timeAccess    //Get/Set Timer, Allows each card id to be limited access at certain time frame.
     > set_superPass        // Set super passwords
 
+# Command line utility
+    > php -f sendCommand.php <ip address> <serial> <command> [options] 
+        // Allows control from command line. Use `php -f sendCommand.php help` for details. 
+
 # Example Codes
     > example.php -> Gets Remote Monitoring IP/Port of board
     > search.php  -> GET Controller board's current setting
