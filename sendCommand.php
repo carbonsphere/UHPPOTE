@@ -32,6 +32,10 @@ switch($command) {
     break;
   case "open_door":
   case "door_delay_get":
+    if (empty($argv[4])) {
+      showHelp($command);
+      exit(1);
+    }
     if ($debug) echo "Door: " . $argv[4];
     $data = [ 'door' => $argv[4] ];
     break;
@@ -39,18 +43,38 @@ switch($command) {
     $dt = New DateTime('now', new DateTimeZone($tz));
     break;
   case "get_auth":
+    if (empty($argv[4])) {
+      showHelp($command);
+      exit(1);
+    }
     $data = [ 'cardid' => $argv[4] ];
     break;
   case "set_ripp":
+    if (empty($argv[4])) {
+      showHelp($command);
+      exit(1);
+    }
     $data = [ 'ip' => $argv[4] ];
     break;
   case "door_delay":
+    if (empty($argv[4])) {
+      showHelp($command);
+      exit(1);
+    }
     $data = [ 'seconds' => $argv[4] ];
     break;
   case "del_auth":
+    if (empty($argv[4])) {
+      showHelp($command);
+      exit(1);
+    }
     $data = [ 'cardid' => $argv[4] ];
     break;
   case "add_auth":
+    if (empty($argv[4]) || empty($argv[5]) || empty($argv[6]) || empty($argv[7]) || empty($argv[8]) || empty($argv[9]) || empty($argv[10])) {
+      showHelp($command);
+      exit(1);
+    }
     $data = [ 'cardid' => $argv[4],
               'beg' => $argv[5],
               'end' => $argv[6],
@@ -61,10 +85,20 @@ switch($command) {
             ];
     break;
   case "get_timeAccess":
+    if (empty($argv[4])) {
+      showHelp($command);
+      exit(1);
+    }
     $data = [ 'index' => $argv[4] ];
     break;
   case "set_timeAccess":
-            $weekday = str_split($argv[7],2);
+    if (empty($argv[4]) || empty($argv[5]) || empty($argv[6]) || empty($argv[7]) || empty($argv[8]) || empty($argv[9]) || 
+        empty($argv[10]) || empty($argv[11]) || empty($argv[12]) || empty($argv[13]) || empty($argv[14]) || empty($argv[15]) || 
+        empty($argv[16]) || empty($argv[17]) || empty($argv[18]) || empty($argv[19]) || empty($argv[20])) {
+      showHelp($command);
+      exit(1);
+    }
+    $weekday = str_split($argv[7],2);
     $data = [ 'index' => $argv[4],
               'beg' => $argv[5],
               'end' => $argv[6],
@@ -76,7 +110,7 @@ switch($command) {
               'w6' => $weekday[5],
               'w7' => $weekday[6],
               'time1beg' => $argv[8],
-              'time2end' => $argv[9],
+              'time1end' => $argv[9],
               'time2beg' => $argv[10],
               'time2end' => $argv[11],
               'time3beg' => $argv[12],
@@ -91,18 +125,34 @@ switch($command) {
             ];
     break;
   case "interlock":
+    if (empty($argv[4])) {
+      showHelp($command);
+      exit(1);
+    }
     $data = [ 'interlock' => $argv[4] ];
     break;
   case "set_ip":
+    if (empty($argv[4])) {
+      showHelp($command);
+      exit(1);
+    }
     $data = [ 'ip' => $argv[4], 
               'mask' => $argv[5],
               'gate' => $argv[6]
             ];
     break;
   case "userid":
+    if (empty($argv[4])) {
+      showHelp($command);
+      exit(1);
+    }
     $data = [ 'userid' => $argv[4] ];
     break;
   case "keypad_switch":
+    if (empty($argv[4])) {
+      showHelp($command);
+      exit(1);
+    }
     $data = [ 'pad1' => $argv[4],
               'pad2' => $argv[5],
               'pad3' => $argv[6],
@@ -110,6 +160,10 @@ switch($command) {
             ];
     break;
   case "set_superPass":
+    if (empty($argv[4])) {
+      showHelp($command);
+      exit(1);
+    }
     $data = [ 'doorIndex' => $argv[4],
               'spassword1' => $argv[5],
               'spassword2' => $argv[6],
