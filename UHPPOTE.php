@@ -157,6 +157,7 @@ class uhppote {
             case $this->command['interlock']:
             case $this->command['reset_alarm']:
             case $this->command['set_recordIndex']:
+            case $this->command['open_door']:
 
                 $status=substr($receive,$index,2);
                 $index+=2;
@@ -517,6 +518,7 @@ class uhppote {
                 break;
             default:
                 $this->debug("Error: unable to process command. Unknown. ".$cmd );
+                var_dump($receive);
                 break;
         }
 
