@@ -27,6 +27,7 @@ Supported Firmware Version V6.56+
     > add_auth/del_auth    //Add/Delete Card ID
     > set_timeAccess/get_timeAccess    //Get/Set Timer, Allows each card id to be limited access at certain time frame.
     > set_superPass        // Set super passwords
+    > add_task_list        // Allows admin to set tasks
 
 # Command line utility
     > php -f sendCommand.php <ip address> <serial> <command> [options] 
@@ -41,6 +42,7 @@ Supported Firmware Version V6.56+
     > del-user-example.php -> Dete user
     > timer-example.php -> add Timer Index
     > set-super-password-example.php
+    > taskList-example.php -> add tasks. procedure and instructions are included.
 
 # Run Example
 ```console
