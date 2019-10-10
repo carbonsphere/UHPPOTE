@@ -41,9 +41,10 @@ $u = new uhppote();
 
 $u->setSn("11223344");
 
+chkTaskListCmd($u);
 
-chkTimerCmd($u);
-chkTimerRet($u);
+#chkTimerCmd($u);
+#chkTimerRet($u);
 
 
 
@@ -97,5 +98,79 @@ function chkTimerRet($u) {
     echo "-- Set Fail\n";
     $u->procCmd($cmd . '00');
 
+
+}
+/*
+ *
+ *                  Template
+
+$template = [
+        'begDate' => '20191010',        // Default current system time.
+        'endDate' => '20291231',        // Default 2019-12-31
+        'w1'     => '01',               // Monday Default Enabled
+        'w2'     => '01',               // Tuesday Default Enabled
+        'w3'     => '01',               // Wednesday Default Enabled
+        'w4'     => '01',               // Thursday Default Enabled
+        'w5'     => '01',               // Friday Default Enabled
+        'w6'     => '01',               // Saturday Default Enabled
+        'w7'     => '01',               // Sunday Default Enabled
+        'sTime'  => '0000',             // Default midnight 00:00 - 23:59
+        'door'   => '01',               // Door Number  01,02,03,04 Default 01
+        'task'   => '00',               // Default 00:Door controlled
+        'option'  => '00',              // Unknown
+    ];
+
+ */
+function chkTaskListCmd($u) {
+
+    /*
+     * Clear tasks first
+     */
+    echo "Clear all tasks first\n";
+    $cmd = $u->getCmdHex('del_task_list', null, null);
+
+    $u->printCMD($cmd);
+
+
+
+    echo "Add task 1\n";
+    /*
+     * Open Door 1 on Mon-Sun from 6:30am
+     */
+    $task1 = [
+        'begDate' => '20191010',
+        'endDate' => '20291231',
+        'sTime'  => '0630',
+        'door'   => '01',
+        'task'   => '01',
+    ];
+
+    $cmd = $u->getCmdHex('add_task_list', null, $task1);
+
+    $u->printCMD($cmd);
+
+    echo "Add task 2\n";
+    /*
+     * Open Door 1 on Mon-Sun from 6:30am
+     */
+    $task2 = [
+        'begDate' => '20191010',
+        'endDate' => '20291231',
+        'sTime'  => '0630',
+        'door'   => '02',
+        'task'   => '01',
+    ];
+
+    $cmd = $u->getCmdHex('add_task_list', null, $task2);
+
+    $u->printCMD($cmd);
+
+    echo "Save tasks\n";
+    /*
+     * Save Tasks
+     */
+    $cmd = $u->getCmdHex('sav_task_list', null, null);
+
+    $u->printCMD($cmd);
 
 }

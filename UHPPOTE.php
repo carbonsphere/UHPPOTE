@@ -34,6 +34,10 @@ class uhppote {
       'interlock'         => 0xA2,  // Set Door interlocking pattern
       'reset_alarm'       => 0xC0,  // Reset Alarm event
       'get_alarm_state'   => 0xC2,  // Get Alarm State
+
+      'sav_task_list'     => 0xAC,  // Save tasks
+      'del_task_list'     => 0xA6,  // Clear tasks
+      'add_task_list'     => 0xA8,  // Add Task List
     );
 
     private $ymd_mask = array(
@@ -158,6 +162,9 @@ class uhppote {
             case $this->command['reset_alarm']:
             case $this->command['set_recordIndex']:
             case $this->command['open_door']:
+            case $this->command['add_task_list']:
+            case $this->command['del_task_list']:
+            case $this->command['sav_task_list']:
 
                 $status=substr($receive,$index,2);
                 $index+=2;
@@ -868,6 +875,76 @@ class uhppote {
             case 'reset_alarm':
                 $hexStr .= $this->sn;   // Add Serial Number
 
+                break;
+
+            /*
+             * Controller task list
+             *
+             * Input parameters
+             $task = [
+                'begDate' => '20191010',        // Default current system time.
+                'endDate' => '20291231',        // Default 2019-12-31
+                'w1'     => '01',               // Monday Default Enabled
+                'w2'     => '01',               // Tuesday Default Enabled
+                'w3'     => '01',               // Wednesday Default Enabled
+                'w4'     => '01',               // Thursday Default Enabled
+                'w5'     => '01',               // Friday Default Enabled
+                'w6'     => '01',               // Saturday Default Enabled
+                'w7'     => '01',               // Sunday Default Enabled
+                'sTime'  => '0000',             // Default midnight
+                'door'   => '01',               // Door Number  01,02,03,04 Default 01
+                'task'   => '00',               // Default 00:Door controlled
+                    // Task List Options
+                    // '00': Door Controlled
+                    // '01': Door Open
+                    // '02': Door Closed
+                    // '03': Disable Time Profile
+                    // '04': Enable Time Profile
+                    // '05': Card : No Password
+                    // '06': (In)Card + Password
+                    // '07': (Out)Card + Password
+                    // '08': MoreCard Disable
+                    // '09': MoreCard Enable
+                    // '10': Trigger Once(V3.9)
+                    // '11': PushButton Disable (V5.52)
+                    // '12': PushButton Enable (V5.52)
+                'option'  => '00',              // Unknown
+                ];
+             *
+             */
+            case 'add_task_list':
+                $dt = (new \DateTime())->format('Ymd');
+
+                $hexStr .= isset($param['begDate']) ? $param['begDate'] : $dt;
+                $hexStr .= isset($param['endDate']) ? $param['endDate'] : "20191231";
+
+                //Monday to Sunday
+                $hexStr .= isset($param['w1'])? $param['w1']: '01';
+                $hexStr .= isset($param['w2'])? $param['w2']: '01';
+                $hexStr .= isset($param['w3'])? $param['w3']: '01';
+                $hexStr .= isset($param['w4'])? $param['w4']: '01';
+                $hexStr .= isset($param['w5'])? $param['w5']: '01';
+                $hexStr .= isset($param['w6'])? $param['w6']: '01';
+                $hexStr .= isset($param['w7'])? $param['w7']: '01';
+
+                //Start time
+                $hexStr .= isset($param['sTime'])? $param['sTime']: '0000';
+
+                //Door number
+                $hexStr .= isset($param['door'])? $param['door']: '01';
+
+                //Task
+                $hexStr .= isset($param['task'])? $param['task']: '00';
+
+                $hexStr .= isset($param['option'])? $param['option']: '00';
+
+                break;
+                /*
+                 * Clears all task list
+                 */
+            case 'del_task_list':
+            case 'sav_task_list':
+                $hexStr .= '55AAAA55';
                 break;
 
             default:
