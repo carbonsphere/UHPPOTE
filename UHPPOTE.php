@@ -629,6 +629,11 @@ class uhppote {
                 }
 
                 break;
+            /*
+                 Clears all task list
+            */
+            case 'del_task_list':
+            case 'sav_task_list':
             case 'del_auth_all':
                 $hexStr .= $this->sn;   // Add Serial Number
                 $hexStr .= '55AAAA55';
@@ -938,13 +943,6 @@ class uhppote {
 
                 $hexStr .= isset($param['option'])? $param['option']: '00';
 
-                break;
-                /*
-                 * Clears all task list
-                 */
-            case 'del_task_list':
-            case 'sav_task_list':
-                $hexStr .= '55AAAA55';
                 break;
 
             default:
