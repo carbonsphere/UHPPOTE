@@ -175,6 +175,31 @@ class uhppote {
                 }
 
                 break;
+            case $this->command['set_time']:
+                $year=substr($receive,$index,4);
+                $index+=4;
+                $month=substr($receive,$index,2);
+                $index+=2;
+                $day = substr($receive,$index,2);
+                $index+=2;
+
+                $hour = substr($receive,$index,2);
+                $index+=2;
+                $minute = substr($receive,$index,2);
+                $index+=2;
+                $second = substr($receive,$index,2);
+                $index+=2;
+
+                $ret = [
+                    'year'      => $year,
+                    'month'     => $month,
+                    'day'       => $day,
+                    'hour'      => $hour,
+                    'minute'    => $minute,
+                    'second'    => $second
+                ];
+
+                break;
             /*
              * Get Device DateTime in string
              * @return "2017-02-20 22:10:33"
