@@ -53,7 +53,9 @@ $ php search.php
 See [DOCUMENTATION.md](DOCUMENTATION.md) for the packet format, every command and its parameters, and the list of fixed bugs.
 
 # Windows desktop app
-[Windows/](Windows/README.md) contains **UHPPOTE Manager**, a native Windows app (written in Go) to search for controllers, open doors, manage cards, read events and change settings. Build it with `Windows\build.bat` on Windows or `Windows/build.sh` from Linux/WSL/macOS.
+[Windows/](Windows/README.md) contains **UHPPOTE Manager**, a native Windows app (written in Go) to search for controllers, open doors, manage cards, read events and change settings. **Download:** get `UHPPOTE-Manager.exe` from the [Releases page](https://github.com/carbonsphere/UHPPOTE/releases) and run it, no install needed. Use `UHPPOTE-Manager-arm64.exe` on ARM PCs. The app is not code-signed, so on first launch Windows may show "Windows protected your PC": click **More info** then **Run anyway**.
+
+To build it yourself, run `Windows\build.bat` on Windows or `Windows/build.sh` from Linux/WSL/macOS.
 
 # License
 MIT. See [LICENSE](LICENSE).

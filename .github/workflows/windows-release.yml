@@ -1,0 +1,55 @@
+# Builds UHPPOTE-Manager.exe for Windows.
+#
+# Push a tag such as v1.0.0 to publish a GitHub Release with the .exe files:
+#   git tag v1.0.0
+#   git push origin v1.0.0
+#
+# Or run it by hand from the Actions tab ("Run workflow") to get the .exe files
+# as a downloadable build artifact without making a release.
+name: Windows release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: Windows
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: Windows/go.mod
+          cache-dependency-path: Windows/go.sum
+
+      - name: Test
+        run: go test ./uhppote
+
+      - name: Build
+        run: |
+          $env:GOARCH = "amd64"
+          go build -trimpath -ldflags "-H windowsgui -s -w" -o UHPPOTE-Manager.exe ./gui
+          $env:GOARCH = "arm64"
+          go build -trimpath -ldflags "-H windowsgui -s -w" -o UHPPOTE-Manager-arm64.exe ./gui
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: UHPPOTE-Manager
+          path: |
+            Windows/UHPPOTE-Manager.exe
+            Windows/UHPPOTE-Manager-arm64.exe
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: gh release create "$env:TAG" UHPPOTE-Manager.exe UHPPOTE-Manager-arm64.exe --title "UHPPOTE Manager $env:TAG" --generate-notes
