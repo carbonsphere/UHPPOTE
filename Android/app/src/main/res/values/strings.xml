@@ -58,4 +58,12 @@
     <string name="keypad_n">Keypad %1$d</string>
     <string name="set_keypads">Set keypads</string>
     <string name="write_only_note">Interlock and keypad settings can only be written; the controller has no command to read them back.</string>
+    <string name="refresh">Refresh</string>
+    <string name="auto_refresh">Auto-refresh every 2 s</string>
+    <string name="pressed">Pressed</string>
+    <string name="released">Released</string>
+    <string name="door">Door</string>
+    <string name="sensor">Sensor</string>
+    <string name="button">Button</string>
+    <string name="lock">Lock</string>
 </resources>

@@ -35,6 +35,8 @@ import com.carbonsphere.uhppote.ui.mainViewModel
 import com.carbonsphere.uhppote.ui.profiles.ProfilesScreen
 import com.carbonsphere.uhppote.ui.settings.SettingsScreen
 import com.carbonsphere.uhppote.ui.status.StatusScreen
+import com.carbonsphere.uhppote.ui.status.StatusViewModel
+import com.carbonsphere.uhppote.ui.statusViewModel
 import com.carbonsphere.uhppote.ui.theme.UhppoteTheme
 
 class MainActivity : ComponentActivity() {
@@ -79,7 +81,11 @@ private fun MainContent(vm: MainViewModel) {
                     val doors: DoorsViewModel = viewModel { doorsViewModel(graph, vm.activeProfile) }
                     DoorsScreen(doors)
                 }
-                Destination.STATUS -> StatusScreen()
+                Destination.STATUS -> {
+                    val graph = LocalContext.current.graph
+                    val status: StatusViewModel = viewModel { statusViewModel(graph, vm.selectedController) }
+                    StatusScreen(status)
+                }
                 Destination.CARDS -> CardsScreen()
                 Destination.EVENTS -> EventsScreen()
                 Destination.SETTINGS -> SettingsScreen()
