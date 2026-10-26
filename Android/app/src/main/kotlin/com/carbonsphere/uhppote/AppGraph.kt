@@ -2,6 +2,7 @@ package com.carbonsphere.uhppote
 
 import android.content.Context
 import com.carbonsphere.uhppote.data.AppStore
+import com.carbonsphere.uhppote.data.CardCache
 import com.carbonsphere.uhppote.data.DataStoreAppStore
 import com.carbonsphere.uhppote.data.SavedController
 import com.carbonsphere.uhppote.net.ActivityLog
@@ -11,6 +12,7 @@ import com.carbonsphere.uhppote.protocol.Controller
 import com.carbonsphere.uhppote.protocol.ControllerApi
 import com.carbonsphere.uhppote.protocol.Device
 import com.carbonsphere.uhppote.protocol.search as searchNetwork
+import java.io.File
 import java.net.InetAddress
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -23,6 +25,7 @@ class AppGraph(context: Context) {
     val store: AppStore = DataStoreAppStore(context.applicationContext)
     val wifi = WifiNetwork(context)
     val log = ActivityLog()
+    val cardCache = CardCache(File(context.applicationContext.filesDir, "cards"))
 
     @Volatile
     private var rawPackets = false
