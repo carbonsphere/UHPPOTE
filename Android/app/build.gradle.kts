@@ -1,3 +1,4 @@
+import java.util.Properties
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -7,6 +8,38 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+// -PappVersion=1.2.3 (or v1.2.3) sets versionName 1.2.3 and versionCode 10203.
+val appVersion = (findProperty("appVersion") as String?)?.trim()?.removePrefix("v")?.takeIf { it.isNotEmpty() }
+val appVersionCode = appVersion?.let { v ->
+    val m = Regex("""(\d+)\.(\d+)\.(\d+)""").matchEntire(v)
+        ?: error("appVersion must look like 1.2.3, got '$v'")
+    val (major, minor, patch) = m.destructured.toList().map(String::toInt)
+    require(minor < 100 && patch < 100) { "appVersion minor and patch must be below 100, got '$v'" }
+    major * 10000 + minor * 100 + patch
+}
+
+/** The release key: from CI environment variables, else the private repo, else none (unsigned). */
+class ReleaseKey(val store: File, val storePassword: String, val alias: String, val keyPassword: String)
+
+fun releaseKey(): ReleaseKey? {
+    val env = System.getenv()
+    env["ANDROID_KEYSTORE_PATH"]?.takeIf { it.isNotBlank() }?.let { path ->
+        fun need(name: String) = env[name]?.takeIf { it.isNotEmpty() } ?: error("$name is not set")
+        return ReleaseKey(rootProject.file(path), need("ANDROID_KEYSTORE_PASSWORD"), need("ANDROID_KEY_ALIAS"), need("ANDROID_KEY_PASSWORD"))
+    }
+    val props = rootProject.file("../private/signing/keystore.properties")
+    if (!props.isFile) return null
+    val p = Properties().apply { props.inputStream().use { load(it) } }
+    return ReleaseKey(
+        File(props.parentFile, p.getProperty("storeFile")),
+        p.getProperty("storePassword"),
+        p.getProperty("keyAlias"),
+        p.getProperty("keyPassword"),
+    )
+}
+
+val key = releaseKey()
+
 android {
     namespace = "com.carbonsphere.uhppote"
     compileSdk = 35
@@ -15,13 +48,26 @@ android {
         applicationId = "com.carbonsphere.uhppote"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.0.0-dev"
+        versionCode = appVersionCode ?: 1
+        versionName = appVersion ?: "0.0.0-dev"
+    }
+
+    signingConfigs {
+        if (key != null) {
+            create("release") {
+                storeFile = key.store
+                storePassword = key.storePassword
+                keyAlias = key.alias
+                keyPassword = key.keyPassword
+            }
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            if (key != null) signingConfig = signingConfigs.getByName("release")
         }
     }
 
