@@ -16,3 +16,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "UHPPOTE-Android"
 include(":protocol")
+include(":app")

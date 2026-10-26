@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">UHPPOTE Manager</string>
+    <string name="nav_doors">Doors</string>
+    <string name="nav_status">Status</string>
+    <string name="nav_cards">Cards</string>
+    <string name="nav_events">Events</string>
+    <string name="nav_settings">Settings</string>
+</resources>

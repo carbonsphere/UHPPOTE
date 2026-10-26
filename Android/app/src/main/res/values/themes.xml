@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Uhppote" parent="android:Theme.Material.Light.NoActionBar" />
+    <color name="ic_launcher_background">#0F6E6E</color>
+</resources>
