@@ -7,6 +7,7 @@ import com.carbonsphere.uhppote.data.device
 import com.carbonsphere.uhppote.data.findController
 import com.carbonsphere.uhppote.data.ip4
 import com.carbonsphere.uhppote.data.setActive
+import com.carbonsphere.uhppote.data.toSaved
 import com.carbonsphere.uhppote.net.ActivityLog
 import com.carbonsphere.uhppote.protocol.Listener
 import com.carbonsphere.uhppote.ui.FakeApi
@@ -105,6 +106,21 @@ class SettingsViewModelTest {
         assertEquals("192.168.1.50", store.state.value.findController(serial)?.ip) // waits 2 s first
         testScheduler.advanceUntilIdle()
         assertEquals("192.168.1.60", store.state.value.findController(serial)?.ip)
+    }
+
+    @Test
+    fun changeNetworkResultNotShownAfterSwitch() = runTest(main.dispatcher) {
+        val selected = MutableStateFlow(saved)
+        val m = SettingsViewModel(
+            controller = selected, store = store, log = ActivityLog(),
+            controllerFor = { object : FakeApi(serial) { override suspend fun setAddress(ip: Inet4Address, mask: Inet4Address, gateway: Inet4Address) {} } },
+            localAddress = { null }, searchNet = { listOf(device(serial, "192.168.1.60")) },
+        )
+        m.changeNetwork("192.168.1.60", "255.255.255.0", "192.168.1.1")
+        selected.value = device(223456789).toSaved() // manager picks another controller while it restarts
+        testScheduler.advanceUntilIdle()
+        assertEquals(null, m.message.value)
+        assertEquals("192.168.1.60", store.state.value.findController(serial)?.ip) // the move is still saved
     }
 
     @Test

@@ -1,6 +1,7 @@
 package com.carbonsphere.uhppote
 
 import android.os.Bundle
+import android.os.SystemClock
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -20,6 +21,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.carbonsphere.uhppote.ui.AppScaffold
 import com.carbonsphere.uhppote.ui.Destination
@@ -70,6 +73,9 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 private fun MainContent(vm: MainViewModel) {
+    // Coming back after a while may mean another site.
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { vm.onBackground(SystemClock.elapsedRealtime()) }
+    LifecycleEventEffect(Lifecycle.Event.ON_START) { vm.onForeground(SystemClock.elapsedRealtime()) }
     when (val screen = vm.screen.collectAsState().value) {
         MainScreen.Loading -> Column(
             Modifier.fillMaxSize(),

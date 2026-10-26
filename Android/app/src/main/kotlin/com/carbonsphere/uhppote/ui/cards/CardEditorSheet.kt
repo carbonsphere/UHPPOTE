@@ -29,9 +29,9 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,6 +44,7 @@ import com.carbonsphere.uhppote.domain.CardForm
 import com.carbonsphere.uhppote.domain.CardProblem
 import com.carbonsphere.uhppote.protocol.Card
 import com.carbonsphere.uhppote.ui.ConfirmDialog
+import com.carbonsphere.uhppote.ui.rememberSaveableList
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -70,13 +71,13 @@ fun CardEditor(vm: CardsViewModel, controller: SavedController, editing: Editing
     val existing = (editing as? Editing.Existing)?.card
     val message by vm.message.collectAsState()
     val today = remember { LocalDate.now() }
-    var number by remember(editing) { mutableStateOf(existing?.number?.toString() ?: "") }
-    var from by remember(editing) { mutableStateOf(existing?.from ?: today) }
-    var to by remember(editing) { mutableStateOf(existing?.to ?: LocalDate.of(today.year + 1, 12, 31)) }
-    val doors = remember(editing) { mutableStateListOf(*(existing?.doors ?: List(4) { 0 }).toTypedArray()) }
-    val profiles = remember(editing) { mutableStateListOf(*Array(4) { i -> profileText(doors[i]) }) }
-    var problem by remember(editing) { mutableStateOf<CardProblem?>(null) }
-    var confirmDelete by remember(editing) { mutableStateOf(false) }
+    var number by rememberSaveable(editing) { mutableStateOf(existing?.number?.toString() ?: "") }
+    var from by rememberSaveable(editing) { mutableStateOf(existing?.from ?: today) }
+    var to by rememberSaveable(editing) { mutableStateOf(existing?.to ?: LocalDate.of(today.year + 1, 12, 31)) }
+    val doors = rememberSaveableList(editing) { existing?.doors ?: List(4) { 0 } }
+    val profiles = rememberSaveableList(editing) { List(4) { i -> profileText(doors[i]) } }
+    var problem by rememberSaveable(editing) { mutableStateOf<CardProblem?>(null) }
+    var confirmDelete by rememberSaveable(editing) { mutableStateOf(false) }
 
     fun fill(card: Card) {
         from = card.from
@@ -167,7 +168,7 @@ fun CardEditor(vm: CardsViewModel, controller: SavedController, editing: Editing
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DateField(label: String, value: LocalDate, onPick: (LocalDate) -> Unit) {
-    var open by remember { mutableStateOf(false) }
+    var open by rememberSaveable { mutableStateOf(false) }
     OutlinedButton(onClick = { open = true }, modifier = Modifier.fillMaxWidth()) { Text(label) }
     if (open) {
         // A card with unreadable dates (LocalDate.MIN) starts the picker at today.

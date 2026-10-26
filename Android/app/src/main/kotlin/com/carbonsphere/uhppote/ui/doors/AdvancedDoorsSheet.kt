@@ -23,8 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,14 +33,15 @@ import androidx.compose.ui.unit.dp
 import com.carbonsphere.uhppote.R
 import com.carbonsphere.uhppote.data.SavedController
 import com.carbonsphere.uhppote.protocol.INTERLOCK_MODES
+import com.carbonsphere.uhppote.ui.rememberSaveableList
 
 /** Write-only controller settings: door interlock and reader keypads. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdvancedDoorsSheet(vm: DoorsViewModel, controller: SavedController, onDismiss: () -> Unit) {
     val message by vm.message.collectAsState()
-    var interlock by remember { mutableIntStateOf(INTERLOCK_MODES.first().first) }
-    val keypads = remember { mutableStateListOf(false, false, false, false) }
+    var interlock by rememberSaveable { mutableIntStateOf(INTERLOCK_MODES.first().first) }
+    val keypads = rememberSaveableList { List(4) { false } }
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(

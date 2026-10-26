@@ -153,4 +153,5 @@
     <string name="remove_controller">Remove controller</string>
     <string name="remove_controller_message">Remove %1$s from this site? It is only forgotten on this device; the controller and its cards are not changed. Widgets for its doors stop working.</string>
     <string name="remove">Remove</string>
+    <string name="saved_list_hint">Saved list from this device. Tap Reload to read it again from the controller.</string>
 </resources>

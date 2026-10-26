@@ -85,14 +85,44 @@ class MainViewModel(
         viewModelScope.launch {
             when (val r = resolve()) {
                 is Resolution.Active -> {
-                    store.update { s ->
-                        r.ipUpdates.entries.fold(s) { acc, (serial, ip) -> acc.updateControllerIp(serial, ip) }
-                            .setActive(r.profileId)
-                    }
-                    r.ipUpdates.forEach { (serial, ip) -> log.info("Controller $serial moved to $ip") }
+                    activate(r)
                     showProfiles.value = false
                 }
                 Resolution.Choose -> showProfiles.value = true
+            }
+        }
+    }
+
+    private suspend fun activate(r: Resolution.Active) {
+        store.update { s ->
+            r.ipUpdates.entries.fold(s) { acc, (serial, ip) -> acc.updateControllerIp(serial, ip) }
+                .setActive(r.profileId)
+        }
+        r.ipUpdates.forEach { (serial, ip) -> log.info("Controller $serial moved to $ip") }
+    }
+
+    private var backgroundAt: Long? = null
+
+    /** The app went to the background at nowMs (a monotonic clock). */
+    fun onBackground(nowMs: Long) {
+        backgroundAt = nowMs
+    }
+
+    /**
+     * The app is back. After more than awayMs the manager may be at another
+     * site, so the site is chosen again; if nothing answers, the current one stays.
+     */
+    fun onForeground(nowMs: Long, awayMs: Long = 120_000) {
+        val at = backgroundAt ?: return
+        backgroundAt = null
+        val before = (screen.value as? MainScreen.Connected)?.profile?.id ?: return
+        if (nowMs - at < awayMs) return
+        viewModelScope.launch {
+            val r = resolve() as? Resolution.Active ?: return@launch
+            activate(r)
+            if (r.profileId != before) {
+                selectedSerial.value = null
+                log.info("Switched to site ${state.value.activeProfile()?.name ?: r.profileId}")
             }
         }
     }

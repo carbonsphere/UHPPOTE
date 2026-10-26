@@ -19,23 +19,23 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.carbonsphere.uhppote.R
 import com.carbonsphere.uhppote.data.SavedController
+import com.carbonsphere.uhppote.ui.rememberSaveableList
 
 /** The controller's name, how many doors it has, and what each door is called. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DoorNamesSheet(vm: SettingsViewModel, c: SavedController, onDismiss: () -> Unit) {
-    var name by remember { mutableStateOf(c.name) }
-    var count by remember { mutableIntStateOf(c.doorCount) }
-    val names = remember { mutableStateListOf(*Array(4) { c.doorNames.getOrElse(it) { "" } }) }
+    var name by rememberSaveable { mutableStateOf(c.name) }
+    var count by rememberSaveable { mutableIntStateOf(c.doorCount) }
+    val names = rememberSaveableList { List(4) { c.doorNames.getOrElse(it) { "" } } }
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(

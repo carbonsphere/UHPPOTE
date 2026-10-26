@@ -33,6 +33,35 @@ class MainViewModelTest {
     }
 
     @Test
+    fun longAbsenceReResolvesSite() = runTest {
+        val two = FakeStore(saved.addProfile("Warehouse", listOf(device(3)), "warehouse"))
+        var resolution: Resolution = Resolution.Active("office", emptyMap())
+        var calls = 0
+        val m = MainViewModel(two, ActivityLog(), resolve = { calls++; resolution }, searchNet = { emptyList() }, newId = { "new" })
+        assertEquals("office", (m.screen.value as MainScreen.Connected).profile.id)
+
+        resolution = Resolution.Active("warehouse", emptyMap())
+        m.onBackground(nowMs = 1_000)
+        m.onForeground(nowMs = 31_000) // 30 s away: same visit
+        assertEquals(1, calls)
+        m.onBackground(nowMs = 40_000)
+        m.onForeground(nowMs = 400_000) // 6 min away: maybe another site
+        assertEquals(2, calls)
+        assertEquals("warehouse", (m.screen.value as MainScreen.Connected).profile.id)
+        assertEquals(3L, m.selectedController.value?.serial)
+    }
+
+    @Test
+    fun reResolveWithNoAnswerKeepsSite() = runTest {
+        var resolution: Resolution = Resolution.Active("office", emptyMap())
+        val m = MainViewModel(FakeStore(saved), ActivityLog(), resolve = { resolution }, searchNet = { emptyList() }, newId = { "new" })
+        resolution = Resolution.Choose
+        m.onBackground(nowMs = 0)
+        m.onForeground(nowMs = 600_000)
+        assertEquals("office", (m.screen.value as MainScreen.Connected).profile.id)
+    }
+
+    @Test
     fun launchChooseGoesToProfiles() = runTest {
         assertEquals(MainScreen.Profiles, vm(FakeStore(saved), Resolution.Choose).screen.value)
     }

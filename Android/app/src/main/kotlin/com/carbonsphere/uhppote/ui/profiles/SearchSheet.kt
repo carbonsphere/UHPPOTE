@@ -28,7 +28,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -40,6 +39,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.carbonsphere.uhppote.R
+import com.carbonsphere.uhppote.domain.defaultSaveTarget
 import com.carbonsphere.uhppote.ui.MainViewModel
 import com.carbonsphere.uhppote.ui.SearchState
 
@@ -51,13 +51,24 @@ fun SearchSheet(vm: MainViewModel, onDismiss: () -> Unit) {
     val search by vm.searchState.collectAsState()
     val state by vm.state.collectAsState()
     var target by rememberSaveable { mutableStateOf("") }
-    val picked = remember { mutableStateMapOf<Long, Boolean>() }
-    // null = new site
-    var profileId by rememberSaveable { mutableStateOf(state.activeProfileId) }
+    var unpicked by rememberSaveable { mutableStateOf(emptyList<Long>()) }
+    // null = new site. Until the manager picks, follow where the found controllers belong.
+    var profileId by rememberSaveable { mutableStateOf<String?>(null) }
+    var profileChosen by rememberSaveable { mutableStateOf(false) }
     var newName by rememberSaveable { mutableStateOf("") }
     var pickerOpen by remember { mutableStateOf(false) }
+    var searched by rememberSaveable { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) { vm.search("") }
+    LaunchedEffect(Unit) {
+        if (!searched) {
+            searched = true
+            vm.search("")
+        }
+    }
+    LaunchedEffect(search) {
+        val s = search
+        if (s is SearchState.Found && !profileChosen) profileId = defaultSaveTarget(state, s.devices)
+    }
 
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheet) {
         Column(
@@ -90,9 +101,9 @@ fun SearchSheet(vm: MainViewModel, onDismiss: () -> Unit) {
                 is SearchState.Found -> {
                     if (s.devices.isEmpty()) Text(stringResource(R.string.none_found))
                     s.devices.forEach { d ->
-                        val checked = picked[d.serial] ?: true
+                        val checked = d.serial !in unpicked
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Checkbox(checked = checked, onCheckedChange = { picked[d.serial] = it })
+                            Checkbox(checked = checked, onCheckedChange = { unpicked = if (it) unpicked - d.serial else unpicked + d.serial })
                             Text(
                                 stringResource(R.string.found_controller, d.serial, d.ip.hostAddress ?: "", d.firmware),
                                 style = MaterialTheme.typography.bodyLarge,
@@ -100,7 +111,7 @@ fun SearchSheet(vm: MainViewModel, onDismiss: () -> Unit) {
                         }
                     }
                     if (s.devices.isNotEmpty()) {
-                        val chosen = s.devices.filter { picked[it.serial] ?: true }
+                        val chosen = s.devices.filter { it.serial !in unpicked }
                         val label = state.profiles.firstOrNull { it.id == profileId }?.name ?: stringResource(R.string.new_site)
                         ExposedDropdownMenuBox(expanded = pickerOpen, onExpandedChange = { pickerOpen = it }) {
                             OutlinedTextField(
@@ -113,9 +124,9 @@ fun SearchSheet(vm: MainViewModel, onDismiss: () -> Unit) {
                             )
                             ExposedDropdownMenu(expanded = pickerOpen, onDismissRequest = { pickerOpen = false }) {
                                 state.profiles.forEach { p ->
-                                    DropdownMenuItem(text = { Text(p.name) }, onClick = { profileId = p.id; pickerOpen = false })
+                                    DropdownMenuItem(text = { Text(p.name) }, onClick = { profileId = p.id; profileChosen = true; pickerOpen = false })
                                 }
-                                DropdownMenuItem(text = { Text(stringResource(R.string.new_site)) }, onClick = { profileId = null; pickerOpen = false })
+                                DropdownMenuItem(text = { Text(stringResource(R.string.new_site)) }, onClick = { profileId = null; profileChosen = true; pickerOpen = false })
                             }
                         }
                         if (profileId == null) {

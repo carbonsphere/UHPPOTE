@@ -209,13 +209,16 @@ class SettingsViewModel(
                 null
             }
             val at = found?.ip?.hostAddress
+            // The new address is saved either way; the message only shows under this controller.
             if (at != null) {
                 store.update { it.updateControllerIp(serial, at) }
                 log.ok("Controller $serial found at $at")
-                _message.value = "Controller found at $at."
+                if (current() == serial) _message.value = "Controller found at $at."
             } else {
                 log.error("Controller $serial not found after the change")
-                _message.value = "The controller did not answer at its new address. Check the settings, then search again from Sites."
+                if (current() == serial) {
+                    _message.value = "The controller did not answer at its new address. Check the settings, then search again from Sites."
+                }
             }
         }
     }

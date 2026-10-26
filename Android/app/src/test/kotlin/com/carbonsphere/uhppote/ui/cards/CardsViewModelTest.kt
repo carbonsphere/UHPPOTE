@@ -44,6 +44,7 @@ class CardsViewModelTest {
         val cache = CardCache(dir, main.dispatcher)
         val api = Api(mutableListOf(card(1), card(2)))
         val m = CardsViewModel(MutableStateFlow(device(423206957).toSaved()), ActivityLog(), { api }, cache)
+        m.setVisible(true)
         assertEquals(listOf(1L, 2L), m.cards.value.map { it.number })
         assertEquals(2L, m.count.value)
 
@@ -59,6 +60,41 @@ class CardsViewModelTest {
         m.filter("3")
         assertEquals(listOf(3L), m.cards.value.map { it.number })
         dir.deleteRecursively()
+    }
+
+    @Test
+    fun loadsOnlyWhileVisible() = runTest(main.dispatcher) {
+        var reads = 0
+        val tables = mapOf(423206957L to mutableListOf(card(1)), 223456789L to mutableListOf(card(7), card(8)))
+        val selected = MutableStateFlow(device(423206957).toSaved())
+        val m = CardsViewModel(selected, ActivityLog(), { c -> reads++; Api(tables.getValue(c.serial)) }, CardCache(Files.createTempDirectory("c").toFile(), main.dispatcher))
+        assertEquals(0, reads)
+        assertEquals(null, m.count.value)
+
+        m.setVisible(true)
+        assertEquals(listOf(1L), m.cards.value.map { it.number })
+        m.setVisible(false)
+        val before = reads
+        selected.value = device(223456789).toSaved() // switched from another tab
+        assertEquals(before, reads)
+        assertEquals(emptyList(), m.cards.value)
+
+        m.setVisible(true)
+        assertEquals(listOf(7L, 8L), m.cards.value.map { it.number })
+    }
+
+    @Test
+    fun cachedListIsMarkedUntilReloaded() = runTest(main.dispatcher) {
+        val cache = CardCache(Files.createTempDirectory("c").toFile(), main.dispatcher)
+        cache.save(423206957, listOf(card(1), card(2)))
+        val api = Api(mutableListOf(card(1), card(5)))
+        val m = CardsViewModel(MutableStateFlow(device(423206957).toSaved()), ActivityLog(), { api }, cache)
+        m.setVisible(true)
+        assertEquals(true, m.fromCache.value) // same count, so the saved list is shown as is
+        assertEquals(listOf(1L, 2L), m.cards.value.map { it.number })
+        m.reload()
+        assertEquals(false, m.fromCache.value)
+        assertEquals(listOf(1L, 5L), m.cards.value.map { it.number })
     }
 
     @Test

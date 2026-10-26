@@ -30,7 +30,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -157,7 +156,7 @@ private fun ListenerSection(vm: SettingsViewModel) {
 /** A number field; an empty field is passed on as -1 so saving can reject it. */
 @Composable
 private fun NumberField(label: String, value: Int, max: Int, modifier: Modifier, onChange: (Int) -> Unit) {
-    var text by remember { mutableStateOf(if (value < 0) "" else value.toString()) }
+    var text by rememberSaveable { mutableStateOf(if (value < 0) "" else value.toString()) }
     // Follow values set from outside (Read, Use this device), not the ones typed here.
     LaunchedEffect(value) {
         if ((text.toIntOrNull() ?: -1) != value) text = if (value < 0) "" else value.toString()
@@ -179,8 +178,8 @@ private fun NumberField(label: String, value: Int, max: Int, modifier: Modifier,
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun DoorsSection(vm: SettingsViewModel, c: SavedController) {
-    var edit by remember { mutableStateOf(false) }
-    var remove by remember { mutableStateOf(false) }
+    var edit by rememberSaveable { mutableStateOf(false) }
+    var remove by rememberSaveable { mutableStateOf(false) }
     Section(stringResource(R.string.doors_section)) {
         LabelValue(stringResource(R.string.controller), c.displayName())
         (1..c.doorCount).forEach { d -> LabelValue(stringResource(R.string.door_n, d), c.doorName(d, "Door $d")) }
@@ -206,11 +205,11 @@ private fun DoorsSection(vm: SettingsViewModel, c: SavedController) {
 
 @Composable
 private fun NetworkSection(vm: SettingsViewModel, c: SavedController) {
-    var ip by remember(c.serial, c.ip) { mutableStateOf(c.ip) }
-    var mask by remember(c.serial) { mutableStateOf(c.mask) }
-    var gateway by remember(c.serial) { mutableStateOf(c.gateway) }
-    var problem by remember { mutableStateOf<String?>(null) }
-    var confirm by remember { mutableStateOf(false) }
+    var ip by rememberSaveable(c.serial, c.ip) { mutableStateOf(c.ip) }
+    var mask by rememberSaveable(c.serial) { mutableStateOf(c.mask) }
+    var gateway by rememberSaveable(c.serial) { mutableStateOf(c.gateway) }
+    var problem by rememberSaveable { mutableStateOf<String?>(null) }
+    var confirm by rememberSaveable { mutableStateOf(false) }
     Section(stringResource(R.string.network)) {
         listOf(
             Triple(R.string.ip_address, ip) { v: String -> ip = v },

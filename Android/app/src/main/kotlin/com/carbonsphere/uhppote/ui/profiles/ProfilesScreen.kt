@@ -55,8 +55,11 @@ fun ProfilesScreen(vm: MainViewModel) {
     val state by vm.state.collectAsState()
     val hasActive = state.activeProfile() != null
     var adding by rememberSaveable { mutableStateOf(false) }
-    var renaming by remember { mutableStateOf<Profile?>(null) }
-    var deleting by remember { mutableStateOf<Profile?>(null) }
+    // Dialogs keep the site's id so they survive rotation.
+    var renamingId by rememberSaveable { mutableStateOf<String?>(null) }
+    var deletingId by rememberSaveable { mutableStateOf<String?>(null) }
+    val renaming = state.profiles.firstOrNull { it.id == renamingId }
+    val deleting = state.profiles.firstOrNull { it.id == deletingId }
 
     BackHandler(enabled = hasActive) { vm.closeProfiles() }
 
@@ -99,10 +102,10 @@ fun ProfilesScreen(vm: MainViewModel) {
                         profile = p,
                         active = p.id == state.activeProfileId,
                         onClick = { vm.switchProfile(p.id) },
-                        onRename = { renaming = p },
+                        onRename = { renamingId = p.id },
                         onMoveUp = { vm.updateState { it.moveProfile(p.id, index - 1) } }.takeIf { index > 0 },
                         onMoveDown = { vm.updateState { it.moveProfile(p.id, index + 1) } }.takeIf { index < state.profiles.size - 1 },
-                        onDelete = { deleting = p },
+                        onDelete = { deletingId = p.id },
                     )
                 }
             }
@@ -115,19 +118,19 @@ fun ProfilesScreen(vm: MainViewModel) {
         NameDialog(
             title = stringResource(R.string.rename_site),
             initial = p.name,
-            onDismiss = { renaming = null },
-            onSave = { name -> vm.updateState { it.renameProfile(p.id, name) }; renaming = null },
+            onDismiss = { renamingId = null },
+            onSave = { name -> vm.updateState { it.renameProfile(p.id, name) }; renamingId = null },
         )
     }
 
     deleting?.let { p ->
         AlertDialog(
-            onDismissRequest = { deleting = null },
+            onDismissRequest = { deletingId = null },
             title = { Text(stringResource(R.string.delete_site)) },
             text = { Text(stringResource(R.string.delete_site_message, p.name)) },
-            dismissButton = { TextButton(onClick = { deleting = null }) { Text(stringResource(R.string.cancel)) } },
+            dismissButton = { TextButton(onClick = { deletingId = null }) { Text(stringResource(R.string.cancel)) } },
             confirmButton = {
-                TextButton(onClick = { vm.updateState { it.deleteProfile(p.id) }; deleting = null }) {
+                TextButton(onClick = { vm.updateState { it.deleteProfile(p.id) }; deletingId = null }) {
                     Text(stringResource(R.string.delete))
                 }
             },

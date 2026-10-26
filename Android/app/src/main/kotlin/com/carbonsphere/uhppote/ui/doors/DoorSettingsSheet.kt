@@ -23,7 +23,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,12 +47,25 @@ private val MODES = listOf(
 fun DoorSettingsSheet(vm: DoorsViewModel, controller: SavedController, door: Int, onDismiss: () -> Unit) {
     val dc by vm.doorControl.collectAsState()
     val message by vm.message.collectAsState()
-    var mode by remember { mutableIntStateOf(DoorMode.CONTROLLED) }
-    var delay by remember { mutableIntStateOf(5) }
+    var mode by rememberSaveable { mutableIntStateOf(DoorMode.CONTROLLED) }
+    var delay by rememberSaveable { mutableIntStateOf(5) }
+    // Read once per opening, not again on rotation, and don't overwrite edits with a reply already shown.
+    var requested by rememberSaveable { mutableStateOf(false) }
+    var applied by rememberSaveable { mutableIntStateOf(0) }
 
-    LaunchedEffect(controller.serial, door) { vm.readDoorControl(controller.serial, door) }
+    LaunchedEffect(controller.serial, door) {
+        if (!requested) {
+            requested = true
+            vm.readDoorControl(controller.serial, door)
+        }
+    }
     LaunchedEffect(dc) {
-        dc?.takeIf { it.serial == controller.serial && it.dc.door == door }?.dc?.let { mode = it.mode; delay = it.delay }
+        val got = dc?.takeIf { it.serial == controller.serial && it.dc.door == door } ?: return@LaunchedEffect
+        if (got.hashCode() != applied) {
+            applied = got.hashCode()
+            mode = got.dc.mode
+            delay = got.dc.delay
+        }
     }
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
@@ -83,7 +97,7 @@ fun DoorSettingsSheet(vm: DoorsViewModel, controller: SavedController, door: Int
             }
             message?.let { Text(it, color = MaterialTheme.colorScheme.secondary) }
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedButton(onClick = { vm.readDoorControl(controller.serial, door) }, modifier = Modifier.weight(1f)) {
+                OutlinedButton(onClick = { applied = 0; vm.readDoorControl(controller.serial, door) }, modifier = Modifier.weight(1f)) {
                     Text(stringResource(R.string.read))
                 }
                 Button(onClick = { vm.saveDoorControl(controller.serial, DoorControl(door, mode, delay)) }, modifier = Modifier.weight(1f)) {

@@ -34,18 +34,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleStartEffect
 import com.carbonsphere.uhppote.R
 import com.carbonsphere.uhppote.data.SavedController
 import com.carbonsphere.uhppote.protocol.Card
 import com.carbonsphere.uhppote.ui.DangerConfirmDialog
 import java.time.LocalDate
+
+private const val NEW_CARD = -1L
 
 /** What the editor is showing: a new card, or an existing one. */
 sealed interface Editing {
@@ -56,6 +59,11 @@ sealed interface Editing {
 /** Every card on the selected controller, with search, add/edit and delete. */
 @Composable
 fun CardsScreen(vm: CardsViewModel) {
+    // Cards are read from the controller only while this screen is showing.
+    LifecycleStartEffect(vm) {
+        vm.setVisible(true)
+        onStopOrDispose { vm.setVisible(false) }
+    }
     val controller by vm.controller.collectAsState()
     val c = controller ?: return
     val count by vm.count.collectAsState()
@@ -64,8 +72,11 @@ fun CardsScreen(vm: CardsViewModel) {
     val progress by vm.loadProgress.collectAsState()
     val complete by vm.complete.collectAsState()
     val message by vm.message.collectAsState()
-    var editing by remember(c.serial) { mutableStateOf<Editing?>(null) }
-    var confirmDeleteAll by remember { mutableStateOf(false) }
+    val fromCache by vm.fromCache.collectAsState()
+    // The open editor, by card number (NEW_CARD for a new card), so it survives rotation.
+    var editingNumber by rememberSaveable(c.serial) { mutableStateOf<Long?>(null) }
+    val editing: Editing? = editingNumber?.let { n -> if (n == NEW_CARD) Editing.New else vm.card(n)?.let { Editing.Existing(it) } }
+    var confirmDeleteAll by rememberSaveable { mutableStateOf(false) }
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val wide = maxWidth >= 840.dp
@@ -73,7 +84,7 @@ fun CardsScreen(vm: CardsViewModel) {
             contentWindowInsets = WindowInsets(0),
             floatingActionButton = {
                 ExtendedFloatingActionButton(
-                    onClick = { vm.clearMessage(); editing = Editing.New },
+                    onClick = { vm.clearMessage(); editingNumber = NEW_CARD },
                     icon = { Icon(Icons.Filled.Add, null) },
                     text = { Text(stringResource(R.string.add_card)) },
                 )
@@ -101,6 +112,9 @@ fun CardsScreen(vm: CardsViewModel) {
                             )
                             Text(stringResource(R.string.loading_cards, p.index, p.found, p.count), style = MaterialTheme.typography.bodySmall)
                         }
+                        if (fromCache && progress == null) {
+                            Text(stringResource(R.string.saved_list_hint), style = MaterialTheme.typography.bodySmall)
+                        }
                         if (!complete && progress == null) {
                             Text(stringResource(R.string.list_incomplete), color = MaterialTheme.colorScheme.error)
                         }
@@ -120,7 +134,7 @@ fun CardsScreen(vm: CardsViewModel) {
                             item { Text(stringResource(R.string.no_cards), Modifier.padding(16.dp)) }
                         }
                         items(cards, key = { it.number }) { card ->
-                            CardRow(card, c) { vm.clearMessage(); editing = Editing.Existing(card) }
+                            CardRow(card, c) { vm.clearMessage(); editingNumber = card.number }
                             HorizontalDivider()
                         }
                         item {
@@ -140,14 +154,14 @@ fun CardsScreen(vm: CardsViewModel) {
                 if (wide) {
                     editing?.let { e ->
                         Column(Modifier.weight(1f).fillMaxSize()) {
-                            CardEditor(vm, c, e, onClose = { editing = null }, modifier = Modifier.padding(16.dp))
+                            CardEditor(vm, c, e, onClose = { editingNumber = null }, modifier = Modifier.padding(16.dp))
                         }
                     }
                 }
             }
         }
         if (!wide) {
-            editing?.let { e -> CardEditorSheet(vm, c, e, onClose = { editing = null }) }
+            editing?.let { e -> CardEditorSheet(vm, c, e, onClose = { editingNumber = null }) }
         }
     }
 

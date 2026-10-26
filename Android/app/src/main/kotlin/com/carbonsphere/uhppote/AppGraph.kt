@@ -6,6 +6,7 @@ import com.carbonsphere.uhppote.data.CardCache
 import com.carbonsphere.uhppote.data.DataStoreAppStore
 import com.carbonsphere.uhppote.data.SavedController
 import com.carbonsphere.uhppote.net.ActivityLog
+import com.carbonsphere.uhppote.net.ControllerCache
 import com.carbonsphere.uhppote.net.WifiNetwork
 import com.carbonsphere.uhppote.net.parseIpv4
 import com.carbonsphere.uhppote.protocol.Controller
@@ -39,11 +40,13 @@ class AppGraph(context: Context) {
 
     private val packetLog = log.packetLog { rawPackets }
 
-    /** A client for a saved controller, bound to Wi-Fi and logging packets. */
-    fun controller(saved: SavedController): ControllerApi {
+    private val controllers = ControllerCache { saved ->
         val address = parseIpv4(saved.ip) ?: InetAddress.getByName("0.0.0.0")
-        return Controller(saved.serial, address, sockets = wifi.socketFactory(), log = packetLog)
+        Controller(saved.serial, address, sockets = wifi.socketFactory(), log = packetLog)
     }
+
+    /** The client for a saved controller, bound to Wi-Fi and logging packets; shared by the app and the widget. */
+    fun controller(saved: SavedController): ControllerApi = controllers.get(saved)
 
     /** Searches the Wi-Fi network, or one address if target is given. */
     suspend fun search(target: InetAddress? = null): List<Device> = wifi.withMulticastLock {

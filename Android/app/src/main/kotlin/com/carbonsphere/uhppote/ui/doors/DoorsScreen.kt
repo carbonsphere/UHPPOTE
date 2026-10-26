@@ -25,6 +25,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,8 +38,8 @@ import com.carbonsphere.uhppote.R
 @Composable
 fun DoorsScreen(vm: DoorsViewModel) {
     val tiles by vm.tiles.collectAsState()
-    var settingsFor by remember { mutableStateOf<Pair<Long, Int>?>(null) }
-    var advancedFor by remember { mutableStateOf<Long?>(null) }
+    var settingsFor by rememberSaveable { mutableStateOf<Pair<Long, Int>?>(null) }
+    var advancedFor by rememberSaveable { mutableStateOf<Long?>(null) }
 
     // Poll door sensors only while the screen is visible.
     LifecycleStartEffect(vm) {

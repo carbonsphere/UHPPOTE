@@ -55,10 +55,18 @@ class CardsViewModel(
     private val _complete = MutableStateFlow(true)
     val complete: StateFlow<Boolean> = _complete.asStateFlow()
 
+    /** True while the list shown is the copy saved on this device, not re-read from the controller. */
+    private val _fromCache = MutableStateFlow(false)
+    val fromCache: StateFlow<Boolean> = _fromCache.asStateFlow()
+
     private val _message = MutableStateFlow<String?>(null)
     val message: StateFlow<String?> = _message.asStateFlow()
 
     private var loadJob: Job? = null
+
+    // Loading only happens while the Cards screen is showing.
+    private var visible = false
+    private var openedFor: Long? = null
 
     init {
         viewModelScope.launch {
@@ -67,16 +75,32 @@ class CardsViewModel(
                 all.value = emptyList()
                 _count.value = null
                 _complete.value = true
+                _fromCache.value = false
                 _message.value = null
-                if (c != null) open(c)
+                openedFor = null
+                if (c != null && visible) open(c)
             }
         }
     }
 
     private fun current(): Long? = controller.value?.serial
 
+    /** Call with true when the Cards screen starts showing and false when it stops. */
+    fun setVisible(on: Boolean) {
+        visible = on
+        val c = controller.value ?: return
+        if (on) {
+            if (openedFor != c.serial) open(c)
+        } else if (loadJob?.isActive == true) {
+            // Don't keep reading thousands of slots behind another screen; start again next time.
+            cancelLoad()
+            openedFor = null
+        }
+    }
+
     /** Shows the cached list at once, then reloads it if the card count changed. */
     private fun open(c: SavedController) {
+        openedFor = c.serial
         loadJob = viewModelScope.launch {
             val cached = cache.load(c.serial)
             if (current() != c.serial) return@launch
@@ -88,6 +112,7 @@ class CardsViewModel(
     fun reload() {
         val c = controller.value ?: return
         cancelLoad()
+        openedFor = c.serial
         startLoad(c, null)
     }
 
@@ -99,7 +124,7 @@ class CardsViewModel(
                 val api = controllerFor(c)
                 val n = api.getCardCount()
                 if (current() == c.serial) _count.value = n
-                if (cached != null && cached.size.toLong() == n) return@runOn CardLoad.Done(cached, complete = true)
+                if (cached != null && cached.size.toLong() == n) return@runOn CardLoad.Done(cached, complete = true) to true
                 var done: CardLoad.Done? = null
                 loadCards(n, api::getCardByIndex).collect { step ->
                     if (current() != c.serial) return@collect
@@ -111,9 +136,10 @@ class CardsViewModel(
                         is CardLoad.Done -> done = step
                     }
                 }
-                done ?: CardLoad.Done(all.value, complete = false)
+                (done ?: CardLoad.Done(all.value, complete = false)) to false
             },
-            onResult = { d ->
+            onResult = { (d, cached) ->
+                _fromCache.value = cached
                 all.value = d.cards
                 _complete.value = d.complete
                 if (d.complete) saveCache(c.serial) else _message.value = "Stopped after 100000 slots; the list may be incomplete."
@@ -137,6 +163,9 @@ class CardsViewModel(
         val list = all.value
         viewModelScope.launch { cache.save(serial, list) }
     }
+
+    /** A card in the full list (not just the search results), if loaded. */
+    fun card(number: Long): Card? = all.value.firstOrNull { it.number == number }
 
     fun filter(query: String) {
         _query.value = query
