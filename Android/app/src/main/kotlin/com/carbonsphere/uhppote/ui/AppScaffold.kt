@@ -1,7 +1,12 @@
 package com.carbonsphere.uhppote.ui
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
@@ -18,7 +23,7 @@ import androidx.compose.ui.res.stringResource
  * navigation rail on wider ones (phone landscape, tablets).
  */
 @Composable
-fun AppScaffold(topBar: @Composable () -> Unit, content: @Composable (Destination) -> Unit) {
+fun AppScaffold(topBar: @Composable (Destination) -> Unit, content: @Composable (Destination) -> Unit) {
     var current by rememberSaveable { mutableStateOf(Destination.DOORS) }
     NavigationSuiteScaffold(
         navigationSuiteItems = {
@@ -32,8 +37,8 @@ fun AppScaffold(topBar: @Composable () -> Unit, content: @Composable (Destinatio
             }
         },
     ) {
-        Column(Modifier.fillMaxSize()) {
-            topBar()
+        Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))) {
+            topBar(current)
             content(current)
         }
     }
