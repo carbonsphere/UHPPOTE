@@ -31,6 +31,8 @@ import com.carbonsphere.uhppote.ui.doors.DoorsScreen
 import com.carbonsphere.uhppote.ui.doors.DoorsViewModel
 import com.carbonsphere.uhppote.ui.doorsViewModel
 import com.carbonsphere.uhppote.ui.events.EventsScreen
+import com.carbonsphere.uhppote.ui.events.EventsViewModel
+import com.carbonsphere.uhppote.ui.eventsViewModel
 import com.carbonsphere.uhppote.ui.mainViewModel
 import com.carbonsphere.uhppote.ui.profiles.ProfilesScreen
 import com.carbonsphere.uhppote.ui.settings.SettingsScreen
@@ -87,7 +89,11 @@ private fun MainContent(vm: MainViewModel) {
                     StatusScreen(status)
                 }
                 Destination.CARDS -> CardsScreen()
-                Destination.EVENTS -> EventsScreen()
+                Destination.EVENTS -> {
+                    val graph = LocalContext.current.graph
+                    val events: EventsViewModel = viewModel { eventsViewModel(graph, vm.selectedController) }
+                    EventsScreen(events)
+                }
                 Destination.SETTINGS -> SettingsScreen()
             }
         }

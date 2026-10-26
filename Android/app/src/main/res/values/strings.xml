@@ -66,4 +66,13 @@
     <string name="sensor">Sensor</string>
     <string name="button">Button</string>
     <string name="lock">Lock</string>
+    <string name="event_indexes">Newest: %1$s · Marked read: %2$s</string>
+    <string name="show_last">Show last</string>
+    <string name="fetch">Fetch</string>
+    <string name="fetch_unread">Fetch unread</string>
+    <string name="mark_all_read">Mark all as read</string>
+    <string name="fetched_n">%1$d fetched</string>
+    <string name="card_n">Card %1$d</string>
+    <string name="granted">Granted</string>
+    <string name="denied">Denied</string>
 </resources>
