@@ -4,6 +4,16 @@ import com.carbonsphere.uhppote.data.SavedController
 import com.carbonsphere.uhppote.protocol.Device
 import java.io.IOException
 
+/** The widget phase saved while a door is being opened. */
+const val PHASE_OPENING = "opening"
+
+/**
+ * Whether a tap must wait for an open already running. An "opening" phase
+ * older than staleMs (the process was killed mid-open) no longer blocks.
+ */
+fun openingInProgress(phase: String?, sinceMs: Long?, nowMs: Long, staleMs: Long = 15_000): Boolean =
+    phase == PHASE_OPENING && sinceMs != null && nowMs - sinceMs in 0 until staleMs
+
 sealed interface WidgetResult {
     data object Opened : WidgetResult
     data object Refused : WidgetResult

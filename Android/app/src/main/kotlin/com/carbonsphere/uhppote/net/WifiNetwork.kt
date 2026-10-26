@@ -24,7 +24,9 @@ class WifiNetwork(context: Context) {
 
     @Suppress("DEPRECATION") // allNetworks: the simplest way to find the Wi-Fi network on API 26+
     private fun wifi(): Network? = connectivity?.allNetworks?.firstOrNull { n ->
-        connectivity.getNetworkCapabilities(n)?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true
+        val caps = connectivity.getNetworkCapabilities(n) ?: return@firstOrNull false
+        // A VPN can report its underlying Wi-Fi transport too; controllers are on the LAN itself.
+        caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) && !caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN)
     }
 
     /** Creates sockets bound to Wi-Fi when there is a Wi-Fi network. */

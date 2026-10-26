@@ -51,7 +51,7 @@ fun DoorSettingsSheet(vm: DoorsViewModel, controller: SavedController, door: Int
 
     LaunchedEffect(controller.serial, door) { vm.readDoorControl(controller.serial, door) }
     LaunchedEffect(dc) {
-        dc?.takeIf { it.door == door }?.let { mode = it.mode; delay = it.delay }
+        dc?.takeIf { it.serial == controller.serial && it.dc.door == door }?.dc?.let { mode = it.mode; delay = it.delay }
     }
 
     ModalBottomSheet(onDismissRequest = onDismiss) {

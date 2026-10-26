@@ -6,6 +6,7 @@ import com.carbonsphere.uhppote.data.addProfile
 import com.carbonsphere.uhppote.data.device
 import com.carbonsphere.uhppote.data.findController
 import com.carbonsphere.uhppote.data.ip4
+import com.carbonsphere.uhppote.data.setActive
 import com.carbonsphere.uhppote.net.ActivityLog
 import com.carbonsphere.uhppote.protocol.Listener
 import com.carbonsphere.uhppote.ui.FakeApi
@@ -60,6 +61,32 @@ class SettingsViewModelTest {
         assertEquals("\"192.168.1.300\" is not a valid IPv4 address", m.message.value)
         m.saveListener(" 192.168.1.2 ", 60001, 5)
         assertEquals(Listener(ip4("192.168.1.2"), 60001, 5), sent)
+    }
+
+    @Test
+    fun saveListenerRejectsBadPortAndInterval() = runTest(main.dispatcher) {
+        var sent: Listener? = null
+        val m = vm(api = object : FakeApi(serial) { override suspend fun setListener(l: Listener) = true.also { sent = l } })
+        m.saveListener("192.168.1.2", 70000, 0)
+        assertEquals("Port must be 0–65535.", m.message.value)
+        m.saveListener("192.168.1.2", -1, 0)
+        assertEquals("Port must be 0–65535.", m.message.value)
+        m.saveListener("192.168.1.2", 60001, 256)
+        assertEquals("Status interval must be 0–255 s.", m.message.value)
+        assertEquals(null, sent)
+    }
+
+    @Test
+    fun removeControllerFromSite() = runTest(main.dispatcher) {
+        var refreshed = 0
+        val two = FakeStore(AppState().addProfile("Office", listOf(device(serial), device(223456789)), "p").setActive("p"))
+        val m = SettingsViewModel(
+            controller = MutableStateFlow(saved), store = two, log = ActivityLog(), controllerFor = { FakeApi(serial) },
+            localAddress = { null }, searchNet = { emptyList() }, onDoorsChanged = { refreshed++ },
+        )
+        m.removeController(serial)
+        assertEquals(listOf(223456789L), two.state.value.profiles.single().controllers.map { it.serial })
+        assertEquals(1, refreshed)
     }
 
     @Test

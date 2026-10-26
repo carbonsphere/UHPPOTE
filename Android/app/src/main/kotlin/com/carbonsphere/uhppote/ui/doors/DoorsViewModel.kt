@@ -47,6 +47,9 @@ data class ControllerDoors(
 
 private data class DoorKey(val serial: Long, val door: Int)
 
+/** A door's lock settings as read from (or saved to) a controller. */
+data class DoorSettings(val serial: Long, val dc: DoorControl)
+
 /** Every door of every controller in the active profile, with live status. */
 class DoorsViewModel(
     private val profile: StateFlow<Profile?>,
@@ -84,8 +87,11 @@ class DoorsViewModel(
     private val _message = MutableStateFlow<String?>(null)
     val message: StateFlow<String?> = _message.asStateFlow()
 
-    private val _doorControl = MutableStateFlow<DoorControl?>(null)
-    val doorControl: StateFlow<DoorControl?> = _doorControl.asStateFlow()
+    private val _doorControl = MutableStateFlow<DoorSettings?>(null)
+    val doorControl: StateFlow<DoorSettings?> = _doorControl.asStateFlow()
+
+    // The door whose settings the sheet shows; replies for any other door are dropped.
+    private var settingsFor: DoorKey? = null
 
     private var poller: Job? = null
 
@@ -154,11 +160,13 @@ class DoorsViewModel(
 
     fun readDoorControl(serial: Long, door: Int) {
         val c = find(serial) ?: return
+        val key = DoorKey(serial, door)
+        settingsFor = key
         _doorControl.value = null
         viewModelScope.runOn(
             serial, "Read ${c.doorName(door, "Door $door")} settings", log, current(serial),
             block = { controllerFor(c).getDoorControl(door) },
-            onResult = { _doorControl.value = it },
+            onResult = { if (settingsFor == key) _doorControl.value = DoorSettings(serial, it) },
             onError = { _message.value = it },
         )
     }
@@ -168,7 +176,10 @@ class DoorsViewModel(
         viewModelScope.runOn(
             serial, "Save ${c.doorName(dc.door, "Door ${dc.door}")} settings (${dc.modeText()}, ${dc.delay} s)", log, current(serial),
             block = { controllerFor(c).setDoorControl(dc) },
-            onResult = { _doorControl.value = it; _message.value = "Saved" },
+            onResult = {
+                if (settingsFor == DoorKey(serial, dc.door)) _doorControl.value = DoorSettings(serial, it)
+                _message.value = "Saved"
+            },
             onError = { _message.value = it },
         )
     }

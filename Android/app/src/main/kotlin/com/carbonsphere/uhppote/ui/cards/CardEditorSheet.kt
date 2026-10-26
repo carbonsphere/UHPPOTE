@@ -74,13 +74,19 @@ fun CardEditor(vm: CardsViewModel, controller: SavedController, editing: Editing
     var from by remember(editing) { mutableStateOf(existing?.from ?: today) }
     var to by remember(editing) { mutableStateOf(existing?.to ?: LocalDate.of(today.year + 1, 12, 31)) }
     val doors = remember(editing) { mutableStateListOf(*(existing?.doors ?: List(4) { 0 }).toTypedArray()) }
+    val profiles = remember(editing) { mutableStateListOf(*Array(4) { i -> profileText(doors[i]) }) }
     var problem by remember(editing) { mutableStateOf<CardProblem?>(null) }
     var confirmDelete by remember(editing) { mutableStateOf(false) }
 
     fun fill(card: Card) {
         from = card.from
         to = card.to
-        card.doors.forEachIndexed { i, v -> if (i < 4) doors[i] = v }
+        card.doors.forEachIndexed { i, v ->
+            if (i < 4) {
+                doors[i] = v
+                profiles[i] = profileText(v)
+            }
+        }
     }
 
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -108,7 +114,11 @@ fun CardEditor(vm: CardsViewModel, controller: SavedController, editing: Editing
         DateField(stringResource(R.string.valid_to, to.toString()), to) { to = it; problem = null }
 
         (1..controller.doorCount).forEach { d ->
-            DoorAccess(controller.doorName(d, "Door $d"), doors[d - 1]) { doors[d - 1] = it }
+            DoorAccess(
+                controller.doorName(d, "Door $d"), doors[d - 1], profiles[d - 1],
+                onChange = { doors[d - 1] = it; problem = null },
+                onProfileText = { profiles[d - 1] = it },
+            )
         }
         Text(stringResource(R.string.card_note_profiles), style = MaterialTheme.typography.bodySmall)
 
@@ -118,7 +128,9 @@ fun CardEditor(vm: CardsViewModel, controller: SavedController, editing: Editing
                     when (p) {
                         CardProblem.NUMBER_MISSING -> R.string.err_card_number
                         CardProblem.NUMBER_INVALID -> R.string.err_card_invalid
+                        CardProblem.DATES_INVALID -> R.string.err_card_date_invalid
                         CardProblem.DATES_REVERSED -> R.string.err_card_dates
+                        CardProblem.PROFILE_INVALID -> R.string.err_card_profile
                     },
                 ),
                 color = MaterialTheme.colorScheme.error,
@@ -158,7 +170,9 @@ private fun DateField(label: String, value: LocalDate, onPick: (LocalDate) -> Un
     var open by remember { mutableStateOf(false) }
     OutlinedButton(onClick = { open = true }, modifier = Modifier.fillMaxWidth()) { Text(label) }
     if (open) {
-        val state = rememberDatePickerState(initialSelectedDateMillis = value.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli())
+        // A card with unreadable dates (LocalDate.MIN) starts the picker at today.
+        val start = value.takeIf { it.year in 1900..2100 } ?: LocalDate.now()
+        val state = rememberDatePickerState(initialSelectedDateMillis = start.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli())
         DatePickerDialog(
             onDismissRequest = { open = false },
             confirmButton = {
@@ -172,14 +186,23 @@ private fun DateField(label: String, value: LocalDate, onPick: (LocalDate) -> Un
     }
 }
 
+/** The profile field's text for a door value (a fresh profile field starts at 2). */
+private fun profileText(value: Int): String = when {
+    value >= 2 -> value.toString()
+    value < 0 -> ""
+    else -> "2"
+}
+
+/** The door value for a typed profile number; anything that is not 2-254 fails validation. */
+private fun profileValue(text: String): Int = text.toIntOrNull()?.takeIf { it >= 2 } ?: -1
+
 @Composable
-private fun DoorAccess(name: String, value: Int, onChange: (Int) -> Unit) {
+private fun DoorAccess(name: String, value: Int, profileText: String, onChange: (Int) -> Unit, onProfileText: (String) -> Unit) {
     val access = when (value) {
         0 -> Access.NONE
         1 -> Access.ALLOWED
         else -> Access.PROFILE
     }
-    var profileText by remember(value) { mutableStateOf(if (value >= 2) value.toString() else "2") }
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(name, style = MaterialTheme.typography.titleSmall)
         SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
@@ -191,7 +214,7 @@ private fun DoorAccess(name: String, value: Int, onChange: (Int) -> Unit) {
                             when (a) {
                                 Access.NONE -> 0
                                 Access.ALLOWED -> 1
-                                Access.PROFILE -> profileText.toIntOrNull()?.coerceIn(2, 254) ?: 2
+                                Access.PROFILE -> profileValue(profileText)
                             },
                         )
                     },
@@ -203,11 +226,12 @@ private fun DoorAccess(name: String, value: Int, onChange: (Int) -> Unit) {
             OutlinedTextField(
                 value = profileText,
                 onValueChange = { t ->
-                    profileText = t.filter(Char::isDigit).take(3)
-                    profileText.toIntOrNull()?.takeIf { it in 2..254 }?.let(onChange)
+                    val text = t.filter(Char::isDigit).take(3)
+                    onProfileText(text)
+                    onChange(profileValue(text))
                 },
                 label = { Text(stringResource(R.string.profile_number)) },
-                isError = profileText.toIntOrNull()?.let { it !in 2..254 } ?: true,
+                isError = value !in 2..254,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 singleLine = true,
                 modifier = Modifier.width(160.dp),

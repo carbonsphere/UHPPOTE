@@ -147,4 +147,10 @@
     <string name="widget_refused">Refused</string>
     <string name="widget_no_reply">No reply – on the right Wi‑Fi?</string>
     <string name="widget_set_up_again">Set up again in the app</string>
+    <string name="err_card_date_invalid">The card\'s dates could not be read. Pick both dates again.</string>
+    <string name="err_card_profile">Enter a time profile number from 2 to 254.</string>
+    <string name="remove_from_site">Remove from site…</string>
+    <string name="remove_controller">Remove controller</string>
+    <string name="remove_controller_message">Remove %1$s from this site? It is only forgotten on this device; the controller and its cards are not changed. Widgets for its doors stop working.</string>
+    <string name="remove">Remove</string>
 </resources>

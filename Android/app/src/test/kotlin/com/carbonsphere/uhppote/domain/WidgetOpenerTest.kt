@@ -51,6 +51,14 @@ class WidgetOpenerTest {
     }
 
     @Test
+    fun staleOpeningDoesNotBlock() {
+        assertEquals(false, openingInProgress("idle", null, 100_000))
+        assertEquals(true, openingInProgress("opening", 95_000, 100_000))
+        assertEquals(false, openingInProgress("opening", 80_000, 100_000)) // stuck for 20 s
+        assertEquals(false, openingInProgress("opening", null, 100_000)) // left by an old version / killed process
+    }
+
+    @Test
     fun foundAtSameIpRetriesThere() = runTest {
         var calls = 0
         val r = openFromWidget(saved, 1, open = { calls++; if (calls == 1) throw NoReplyException() else true }, search = { listOf(device(serial, "192.168.1.50")) })

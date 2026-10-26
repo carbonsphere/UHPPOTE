@@ -26,6 +26,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import com.carbonsphere.uhppote.BuildConfig
 import com.carbonsphere.uhppote.R
 import com.carbonsphere.uhppote.data.SavedController
+import com.carbonsphere.uhppote.ui.ConfirmDialog
 import com.carbonsphere.uhppote.ui.DangerConfirmDialog
 
 const val REPO_URL = "https://github.com/carbonsphere/UHPPOTE"
@@ -152,14 +154,19 @@ private fun ListenerSection(vm: SettingsViewModel) {
     }
 }
 
+/** A number field; an empty field is passed on as -1 so saving can reject it. */
 @Composable
 private fun NumberField(label: String, value: Int, max: Int, modifier: Modifier, onChange: (Int) -> Unit) {
-    var text by remember(value) { mutableStateOf(value.toString()) }
+    var text by remember { mutableStateOf(if (value < 0) "" else value.toString()) }
+    // Follow values set from outside (Read, Use this device), not the ones typed here.
+    LaunchedEffect(value) {
+        if ((text.toIntOrNull() ?: -1) != value) text = if (value < 0) "" else value.toString()
+    }
     OutlinedTextField(
         value = text,
         onValueChange = { t ->
-            text = t.filter(Char::isDigit).take(5)
-            text.toIntOrNull()?.takeIf { it <= max }?.let(onChange)
+            text = t.filter(Char::isDigit).take(6)
+            onChange(text.toIntOrNull() ?: -1)
         },
         label = { Text(label) },
         isError = text.toIntOrNull()?.let { it > max } ?: true,
@@ -169,15 +176,32 @@ private fun NumberField(label: String, value: Int, max: Int, modifier: Modifier,
     )
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun DoorsSection(vm: SettingsViewModel, c: SavedController) {
     var edit by remember { mutableStateOf(false) }
+    var remove by remember { mutableStateOf(false) }
     Section(stringResource(R.string.doors_section)) {
         LabelValue(stringResource(R.string.controller), c.displayName())
         (1..c.doorCount).forEach { d -> LabelValue(stringResource(R.string.door_n, d), c.doorName(d, "Door $d")) }
-        OutlinedButton(onClick = { edit = true }) { Text(stringResource(R.string.edit_names)) }
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(onClick = { edit = true }) { Text(stringResource(R.string.edit_names)) }
+            TextButton(
+                onClick = { remove = true },
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+            ) { Text(stringResource(R.string.remove_from_site)) }
+        }
     }
     if (edit) DoorNamesSheet(vm, c, onDismiss = { edit = false })
+    if (remove) {
+        ConfirmDialog(
+            title = stringResource(R.string.remove_controller),
+            text = stringResource(R.string.remove_controller_message, c.displayName()),
+            confirm = stringResource(R.string.remove),
+            onConfirm = { vm.removeController(c.serial) },
+            onDismiss = { remove = false },
+        )
+    }
 }
 
 @Composable

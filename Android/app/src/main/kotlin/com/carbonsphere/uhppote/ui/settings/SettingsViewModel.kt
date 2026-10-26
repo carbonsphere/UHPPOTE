@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.carbonsphere.uhppote.data.AppState
 import com.carbonsphere.uhppote.data.AppStore
 import com.carbonsphere.uhppote.data.SavedController
+import com.carbonsphere.uhppote.data.activeProfile
+import com.carbonsphere.uhppote.data.removeController
 import com.carbonsphere.uhppote.data.renameController
 import com.carbonsphere.uhppote.data.setDoorCount
 import com.carbonsphere.uhppote.data.setDoorName
@@ -145,7 +147,15 @@ class SettingsViewModel(
             _message.value = badIp(ip)
             return
         }
-        val l = Listener(address, port.coerceIn(0, 65535), interval.coerceIn(0, 255))
+        if (port !in 0..65535) {
+            _message.value = "Port must be 0–65535."
+            return
+        }
+        if (interval !in 0..255) {
+            _message.value = "Status interval must be 0–255 s."
+            return
+        }
+        val l = Listener(address, port, interval)
         viewModelScope.runOn(
             c.serial, "Set event listener to ${address.hostAddress}:${l.port}", log, ::current,
             block = { controllerFor(c).setListener(l).orRefused() },
@@ -219,6 +229,13 @@ class SettingsViewModel(
     fun setDoorName(serial: Long, door: Int, name: String) = update(doors = true) { it.setDoorName(serial, door, name) }
 
     fun renameController(serial: Long, name: String) = update { it.renameController(serial, name) }
+
+    /** Forgets a controller in the active site (the controller itself is not changed). */
+    fun removeController(serial: Long) = update(doors = true) { s ->
+        val site = s.activeProfile()?.takeIf { p -> p.controllers.any { it.serial == serial } }
+            ?: s.profiles.firstOrNull { p -> p.controllers.any { it.serial == serial } }
+        if (site == null) s else s.removeController(site.id, serial)
+    }
 
     private fun update(doors: Boolean = false, transform: (AppState) -> AppState) {
         viewModelScope.launch {

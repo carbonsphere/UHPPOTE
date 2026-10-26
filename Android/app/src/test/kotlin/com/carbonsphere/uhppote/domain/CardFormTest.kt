@@ -24,6 +24,22 @@ class CardFormTest {
     }
 
     @Test
+    fun cardFormRejectsBadProfile() {
+        fun doors(vararg d: Int) = CardForm("10012345", from, to, d.toList())
+        assertEquals(CardProblem.PROFILE_INVALID, (doors(1, 300, 0, 0).validate().exceptionOrNull() as CardFormException).problem)
+        assertEquals(CardProblem.PROFILE_INVALID, (doors(1, -1, 0, 0).validate().exceptionOrNull() as CardFormException).problem)
+        assertEquals(CardProblem.PROFILE_INVALID, (doors(255, 0, 0, 0).validate().exceptionOrNull() as CardFormException).problem)
+        assertEquals(listOf(0, 1, 2, 254), doors(0, 1, 2, 254).validate().getOrThrow().doors)
+    }
+
+    @Test
+    fun cardFormRejectsUnreadableDate() {
+        // A card whose dates the controller reported as invalid comes back as LocalDate.MIN.
+        assertEquals(CardProblem.DATES_INVALID, problem(form("10012345", from = LocalDate.MIN)))
+        assertEquals(CardProblem.DATES_INVALID, problem(form("10012345", to = LocalDate.of(10000, 1, 1))))
+    }
+
+    @Test
     fun cardFormAcceptsValid() {
         assertEquals(Card(10012345, from, to, listOf(1, 0, 5, 1)), form(" 10012345 ").validate().getOrThrow())
         assertEquals(4294967039L, form("4294967039").validate().getOrThrow().number)

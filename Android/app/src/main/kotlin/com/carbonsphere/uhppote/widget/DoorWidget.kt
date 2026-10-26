@@ -40,6 +40,7 @@ import androidx.glance.unit.ColorProvider
 import com.carbonsphere.uhppote.MainActivity
 import com.carbonsphere.uhppote.R
 import com.carbonsphere.uhppote.data.findController
+import com.carbonsphere.uhppote.domain.PHASE_OPENING
 import com.carbonsphere.uhppote.graph
 
 /** Per-widget state: which door it opens and what it is showing. */
@@ -48,11 +49,12 @@ object WidgetKeys {
     val serial = longPreferencesKey("serial")
     val door = intPreferencesKey("door")
     val phase = stringPreferencesKey("phase")
+    val openingSince = longPreferencesKey("openingSince")
 }
 
 object Phase {
     const val IDLE = "idle"
-    const val OPENING = "opening"
+    const val OPENING = PHASE_OPENING
     const val OPENED = "opened"
     const val REFUSED = "refused"
     const val NO_REPLY = "noreply"

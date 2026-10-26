@@ -6,7 +6,10 @@ import com.carbonsphere.uhppote.data.addProfile
 import com.carbonsphere.uhppote.data.device
 import com.carbonsphere.uhppote.data.setDoorName
 import com.carbonsphere.uhppote.net.ActivityLog
+import com.carbonsphere.uhppote.protocol.DoorControl
+import com.carbonsphere.uhppote.protocol.DoorMode
 import com.carbonsphere.uhppote.protocol.NoReplyException
+import kotlinx.coroutines.CompletableDeferred
 import com.carbonsphere.uhppote.protocol.Status
 import com.carbonsphere.uhppote.ui.FakeApi
 import com.carbonsphere.uhppote.ui.MainDispatcherRule
@@ -67,6 +70,22 @@ class DoorsViewModelTest {
         m.open(423206957, 1)
         testScheduler.advanceTimeBy(3100)
         assertEquals(null, m.tiles.value.single().doors[0].lastResult)
+    }
+
+    @Test
+    fun lateDoorSettingsReplyIgnored() = runTest(main.dispatcher) {
+        val slow = CompletableDeferred<DoorControl>()
+        val m = vm(profile(423206957, 223456789)) { serial ->
+            object : FakeApi(serial) {
+                override suspend fun getDoorControl(door: Int) =
+                    if (serial == 423206957L) slow.await() else DoorControl(door, DoorMode.NORMALLY_OPEN, 9)
+            }
+        }
+        m.readDoorControl(423206957, 1)
+        m.readDoorControl(223456789, 1)
+        assertEquals(DoorSettings(223456789, DoorControl(1, DoorMode.NORMALLY_OPEN, 9)), m.doorControl.value)
+        slow.complete(DoorControl(1, DoorMode.CONTROLLED, 3)) // the first controller answers late
+        assertEquals(DoorSettings(223456789, DoorControl(1, DoorMode.NORMALLY_OPEN, 9)), m.doorControl.value)
     }
 
     @Test
