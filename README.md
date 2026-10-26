@@ -57,6 +57,11 @@ See [DOCUMENTATION.md](DOCUMENTATION.md) for the packet format, every command an
 
 To build it yourself, run `Windows\build.bat` on Windows or `Windows/build.sh` from Linux/WSL/macOS.
 
+# Android app
+[Android/](Android/README.md) contains **UHPPOTE Manager for Android**, for phones and tablets in portrait or landscape. On the controller's Wi‑Fi a manager can open a door with one tap, from the app or from a home-screen widget, and a tablet can manage cards, events and settings like the Windows app. Controllers are grouped into sites, and the app picks the right site for the network you are on. **Download:** get `UHPPOTE-Manager.apk` from the [Releases page](https://github.com/carbonsphere/UHPPOTE/releases) on the phone and open it. Android will ask you to allow installing unknown apps, and Play Protect may warn because it is not from the Play Store: tap **More details** then **Install anyway**.
+
+To build it yourself, open the `Android/` folder in Android Studio, or run `./gradlew assembleDebug` in it.
+
 # License
 MIT. See [LICENSE](LICENSE).
 

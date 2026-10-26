@@ -10,6 +10,7 @@ replies into PHP arrays/values.
 - Language: plain PHP (no framework, no Composer), requires the **`sockets`** extension
 - Upstream: https://github.com/carbonsphere/UHPPOTE
 - Windows desktop app: [`Windows/`](Windows/README.md)
+- Android app: [`Android/`](Android/README.md)
 
 ---
 
@@ -276,3 +277,24 @@ app written in Go. It is a self-contained Go module:
 | `Windows/uhppote/` | Go port of the protocol, with tests checked against the PHP packets |
 | `Windows/gui/` | The desktop app |
 | `Windows/build.bat`, `Windows/build.sh` | Build `UHPPOTE-Manager.exe` on Windows, or cross-compile from Linux/WSL/macOS |
+
+---
+
+## 11. Android app
+
+[`Android/`](Android/README.md) holds **UHPPOTE Manager for Android**, a Kotlin /
+Jetpack Compose app for phones and tablets, with a home-screen widget that opens a
+door in one tap. It is a self-contained Gradle project:
+
+| Path | What |
+|---|---|
+| `Android/protocol/` | Kotlin port of the protocol (plain JVM module), with tests checked against the PHP packets |
+| `Android/app/` | The app: sites and saved controllers, the five screens, the widget |
+
+It also reads the controller's card table slot by slot with command `0x5C` (get card
+by index; `0` = past the end, `FFFFFFFF` = deleted slot), which the PHP library does
+not use, so the full card list can be shown.
+
+The GitHub release workflow (`.github/workflows/release.yml`) builds and tests both
+apps on every `v*` tag and attaches `UHPPOTE-Manager.exe`,
+`UHPPOTE-Manager-arm64.exe` and `UHPPOTE-Manager.apk` to the release.
