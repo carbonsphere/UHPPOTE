@@ -27,7 +27,7 @@ $port = 60000;
 $sock = createSocket();
 
 // Enable broadcast
-socket_set_option($sock, 1, 6, TRUE);
+socket_set_option($sock, SOL_SOCKET, SO_BROADCAST, 1);
 
 /*
  *  Input is binary format of command
@@ -72,6 +72,8 @@ function createSocket()
 
     die("Couldn't create socket: [$errorcode] $errormsg \n");
    }
+   // Don't wait forever if the board doesn't answer (wrong IP or serial number).
+   socket_set_option($sock, SOL_SOCKET, SO_RCVTIMEO, array('sec' => 3, 'usec' => 0));
    return $sock;
 }
 

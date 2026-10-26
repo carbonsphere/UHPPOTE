@@ -56,7 +56,7 @@ $port = 60000;
 
 $template = [
         'begDate' => '20191010',        // Default current system time.
-        'endDate' => '20291231',        // Default 2019-12-31
+        'endDate' => '20291231',        // Default 2029-12-31
         'w1'     => '01',               // Monday Default Enabled
         'w2'     => '01',               // Tuesday Default Enabled
         'w3'     => '01',               // Wednesday Default Enabled
@@ -67,7 +67,7 @@ $template = [
         'sTime'  => '0000',             // Default midnight 00:00 - 23:59
         'door'   => '01',               // Door Number  01,02,03,04 Default 01
         'task'   => '00',               // Default 00:Door controlled
-        'option'  => '00',              // Unknown
+        'option'  => '00',              // More cards required, Default 00
     ];
 
  */
@@ -378,6 +378,8 @@ function createSocket()
 
         die("Couldn't create socket: [$errorcode] $errormsg \n");
     }
+    // Don't wait forever if the board doesn't answer (wrong IP or serial number).
+    socket_set_option($sock, SOL_SOCKET, SO_RCVTIMEO, array('sec' => 3, 'usec' => 0));
     return $sock;
 }
 

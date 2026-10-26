@@ -100,5 +100,34 @@ $reply = getReturnPacket($sock);
 echo "Processing return status\n";
 $procmsg = $a->procCmd(bin2hex($reply));
 
+var_dump($procmsg);
+
+
+function createSocket() 
+{
+  if(!($sock = socket_create(AF_INET, SOCK_DGRAM, 0)))
+  {
+    $errorcode = socket_last_error();
+    $errormsg = socket_strerror($errorcode);
+
+    die("Couldn't create socket: [$errorcode] $errormsg \n");
+   }
+   // Don't wait forever if the board doesn't answer (wrong IP or serial number).
+   socket_set_option($sock, SOL_SOCKET, SO_RCVTIMEO, array('sec' => 3, 'usec' => 0));
+   return $sock;
+}
+
+
+function getReturnPacket($sock) 
+{
+  if(socket_recv ( $sock , $reply , 2045 , MSG_WAITALL ) === FALSE)
+  {
+     $errorcode = socket_last_error();
+     $errormsg = socket_strerror($errorcode);
+
+    die("Receive socket Error: [$errorcode] $errormsg \n");
+  }
+  return $reply;
+}
 
 ?>

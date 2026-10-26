@@ -4,6 +4,7 @@ class uhppote {
     private $type = 0x17;
     private $sn = null;             //Device Serial Number in hex
     private $packetsize = 128;      // 64 since hex is 2 characters instead of 1;
+    private $verbose = true;        // Print debug messages. Turn off with setDebug(false)
 
     private $command = array(
       'dev_status'        => 0x20,
@@ -548,9 +549,18 @@ class uhppote {
                 ];
                 
                 break;
+            /*
+             * Alarm state reply layout is not documented.
+             * Return the raw payload bytes (hex) after the serial number.
+             */
+            case $this->command['get_alarm_state']:
+                $ret = array(
+                  'raw' => substr($receive,$index)
+                );
+                break;
             default:
                 $this->debug("Error: unable to process command. Unknown. ".$cmd );
-                var_dump($receive);
+                $this->debug($receive);
                 break;
         }
 
@@ -562,8 +572,8 @@ class uhppote {
     /**
      * This function will construct network payload for commands
      * Commands:
-     * search               //Search
-     * get_ip/set_ip        //Get/Set device IP
+     * search               //Search (also returns the device IP settings)
+     * set_ip               //Set device IP
      * get_ripp/set_ripp    //Get/Set Remote host IP
      * door_delay/door_delay_get    //Set/Get Door Delay
      * open_door            //Open Door
@@ -572,9 +582,13 @@ class uhppote {
      *
      * @param $cmd
      * @param \DateTime $dt
-     * @return string
+     * @return string|false  false if the command or its parameters are invalid
      */
     public function getCmdHex($cmd,$dt=null,$param=null) {
+        if(!isset($this->command[$cmd])) {
+            $this->debug("Error unable to find command ".$cmd);
+            return false;
+        }
         //Search doesn't need serial number
         if($cmd != 'search') {
             $this->chkSerialNumber();
@@ -592,8 +606,6 @@ class uhppote {
                     $idstr = $this->reverseByte(sprintf("%08X",$id));
                     $hexStr .= $idstr;
                 }
-                break;
-            case 'get_ip':                  // Get Device's IP Info
                 break;
             case 'set_ip':                  // Set Device's IP Info
                 $hexStr .= $this->sn;   // Add Serial Number
@@ -639,18 +651,28 @@ class uhppote {
                 break;
             case 'door_delay_get':  // Gets Door Delay seconds
                 $hexStr .= $this->sn;   // Add Serial Number
-                if(isset($param['door'])) {
-                    $hexStr .= $param['door'];
+                $door = $this->doorByte($param, 'door');
+                if($door === false) {
+                    return false;
                 }
+                $hexStr .= $door;
                 break;
+            /*
+             * param['door']     1-4
+             * param['seconds']  0-255 seconds the door stays unlocked
+             * param['mode']     optional: '01' normally open, '02' normally closed, '03' controlled (default)
+             */
             case 'door_delay':
                 $hexStr .= $this->sn;   // Add Serial Number
 
                 if(isset($param['seconds'])) {
-                    $sec = sprintf("%02X",$param['seconds']);
-                    $hexStr .= $param['door'];
-                    $hexStr .= '03';
-                    $hexStr .= $sec;
+                    $door = $this->doorByte($param, 'door');
+                    if($door === false) {
+                        return false;
+                    }
+                    $hexStr .= $door;
+                    $hexStr .= isset($param['mode']) ? $param['mode'] : '03';
+                    $hexStr .= sprintf("%02X",$param['seconds']);
                 }
 
                 break;
@@ -748,8 +770,13 @@ class uhppote {
                 break;
             case 'open_door':
                 $hexStr .= $this->sn;   // Add Serial Number
-                $hexStr .= isset($param['door']) ? (gettype($param['door']) == 'integer' ? '0' . strval($param['door']) : '01') : '01'; // Add Door Number '01' '02' '03' '04'
-                $this->debug("Open Door");
+                // Door 1-4, as int (3) or string ('03'). Defaults to door 1.
+                $door = isset($param['door']) ? $this->doorByte($param, 'door') : '01';
+                if($door === false) {
+                    return false;
+                }
+                $hexStr .= $door;
+                $this->debug("Open Door $door");
                 break;
             case 'set_recordIndex':
                 $hexStr .= $this->sn;   // Add Serial Number
@@ -860,7 +887,11 @@ class uhppote {
                 $hexStr .= $this->sn;   // Add Serial Number
 
                 // 1 byte door index  '01': door 1    '02': door 2  '03': door 3   '04': door 4
-                $hexStr .= $param['doorIndex'];
+                $door = $this->doorByte($param, 'doorIndex');
+                if($door === false) {
+                    return false;
+                }
+                $hexStr .= $door;
 
                 $hexStr .= '000000';    // Add 3 byte spacer
 
@@ -913,7 +944,7 @@ class uhppote {
              * Input parameters
              $task = [
                 'begDate' => '20191010',        // Default current system time.
-                'endDate' => '20291231',        // Default 2019-12-31
+                'endDate' => '20291231',        // Default 2029-12-31
                 'w1'     => '01',               // Monday Default Enabled
                 'w2'     => '01',               // Tuesday Default Enabled
                 'w3'     => '01',               // Wednesday Default Enabled
@@ -938,15 +969,17 @@ class uhppote {
                     // '10': Trigger Once(V3.9)
                     // '11': PushButton Disable (V5.52)
                     // '12': PushButton Enable (V5.52)
-                'option'  => '00',              // Unknown
+                'option'  => '00',              // More cards required, Default 00
                 ];
              *
              */
             case 'add_task_list':
+                $hexStr .= $this->sn;   // Add Serial Number
+
                 $dt = (new \DateTime())->format('Ymd');
 
                 $hexStr .= isset($param['begDate']) ? $param['begDate'] : $dt;
-                $hexStr .= isset($param['endDate']) ? $param['endDate'] : "20191231";
+                $hexStr .= isset($param['endDate']) ? $param['endDate'] : "20291231";
 
                 //Monday to Sunday
                 $hexStr .= isset($param['w1'])? $param['w1']: '01';
@@ -961,7 +994,11 @@ class uhppote {
                 $hexStr .= isset($param['sTime'])? $param['sTime']: '0000';
 
                 //Door number
-                $hexStr .= isset($param['door'])? $param['door']: '01';
+                $door = isset($param['door']) ? $this->doorByte($param, 'door') : '01';
+                if($door === false) {
+                    return false;
+                }
+                $hexStr .= $door;
 
                 //Task
                 $hexStr .= isset($param['task'])? $param['task']: '00';
@@ -970,9 +1007,6 @@ class uhppote {
 
                 break;
 
-            default:
-                $this->debug("Error unable to find command ".$cmd);
-                break;
         }
 
         $hexStr = $this->padCmdPackets($hexStr);
@@ -995,14 +1029,37 @@ class uhppote {
                 $cmd .= '00';
             }
             $this->debug("Padding ".$padlen);
-        } else {
-            $this->debug("Error, unable to pad Packets");
+        } elseif($clen > $this->packetsize) {
+            $this->debug("Error, command packet is longer than 64 bytes");
         }
         return $cmd;
     }
 
+    /**
+     * Door number 1-4 from $param[$key], given as int (3) or string ('03').
+     * @return string|false  '01'-'04', or false if invalid
+     */
+    private function doorByte($param, $key) {
+        $door = isset($param[$key]) ? $param[$key] : null;
+        if(!is_numeric($door) || intval($door) < 1 || intval($door) > 4) {
+            $this->debug("Error: invalid door '$door', must be 1-4");
+            return false;
+        }
+        return sprintf("%02X", intval($door));
+    }
+
     private function debug($msg) {
-        echo $msg . "\n";
+        if($this->verbose) {
+            echo $msg . "\n";
+        }
+    }
+
+    /**
+     * Enable or disable debug output (enabled by default).
+     * @param bool $on
+     */
+    public function setDebug($on) {
+        $this->verbose = (bool)$on;
     }
 
     /**
@@ -1062,8 +1119,7 @@ class uhppote {
 
     private function chkSerialNumber() {
         if(!$this->sn) {
-            echo "Please set Serial number before start";
-            die;
+            throw new \Exception("Please set Serial number before start");
         }
     }
 

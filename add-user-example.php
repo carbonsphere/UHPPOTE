@@ -205,6 +205,8 @@ function createSocket()
 
     die("Couldn't create socket: [$errorcode] $errormsg \n");
    }
+   // Don't wait forever if the board doesn't answer (wrong IP or serial number).
+   socket_set_option($sock, SOL_SOCKET, SO_RCVTIMEO, array('sec' => 3, 'usec' => 0));
    return $sock;
 }
 

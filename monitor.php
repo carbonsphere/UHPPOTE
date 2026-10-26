@@ -46,7 +46,7 @@ echo "Send the folling command to network\n$cmd\n";
 $ip = "192.168.1.1";
 $port = 60000;
 
-$sock = createSocket();
+$sock = createSocket(3);
 
 /*
  *  Input is binary format of command
@@ -111,7 +111,7 @@ while(1)
 socket_close($sock);
 
 
-function createSocket() 
+function createSocket($timeout = 0) 
 {
   if(!($sock = socket_create(AF_INET, SOCK_DGRAM, 0)))
   {
@@ -119,6 +119,10 @@ function createSocket()
     $errormsg = socket_strerror($errorcode);
 
     die("Couldn't create socket: [$errorcode] $errormsg \n");
+   }
+   // Wait at most $timeout seconds for a reply (0 = wait forever, used for the event listener).
+   if($timeout > 0) {
+     socket_set_option($sock, SOL_SOCKET, SO_RCVTIMEO, array('sec' => $timeout, 'usec' => 0));
    }
    return $sock;
 }

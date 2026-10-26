@@ -3,12 +3,13 @@ include "UHPPOTE.php";
 
 $debug = 0; // If enabled optional debug output will be present.
 $tz = 'America/Chicago'; // Set your time zone here. Find it at https://www.php.net/manual/en/timezones.php.
+$timeout = 3; // Seconds to wait for the board to reply.
 
 // check for valid command line
-$cardip = $argv[1];
-$cardsn = $argv[2];
-$command = $argv[3];
-if ($cardip == "help" || !$argv[1] || !$argv[2] || !$argv[3]) {
+$cardip = isset($argv[1]) ? $argv[1] : '';
+$cardsn = isset($argv[2]) ? $argv[2] : '';
+$command = isset($argv[3]) ? $argv[3] : '';
+if ($cardip == "help" || !$cardip || !$cardsn || !$command) {
   $command = "help";
 }
 
@@ -22,8 +23,6 @@ switch($command) {
   case "get_time":
   case "get_auth_rec":
   case "get_recordIndex":
-  case "set_recordIndex":
-  case "get_records":
   case "get_ripp":
   case "del_auth_all":
   case "get_alarm_state":
@@ -38,6 +37,17 @@ switch($command) {
     }
     if ($debug) echo "Door: " . $argv[4];
     $data = [ 'door' => $argv[4] ];
+    break;
+  case "set_recordIndex":
+    if (!isset($argv[4]) || !is_numeric($argv[4])) {
+      showHelp($command);
+      exit(1);
+    }
+    $dt = intval($argv[4]);
+    break;
+  case "get_records":
+    // The library fetches record <index + 1>, 0xfffffffe fetches the newest record.
+    $dt = isset($argv[4]) ? intval($argv[4]) - 1 : 0xfffffffe;
     break;
   case "set_time":
     $dt = New DateTime('now', new DateTimeZone($tz));
@@ -54,14 +64,19 @@ switch($command) {
       showHelp($command);
       exit(1);
     }
-    $data = [ 'ip' => $argv[4] ];
+    $data = [ 'ip' => $argv[4],
+              'port' => isset($argv[5]) ? intval($argv[5]) : 60002,
+              'sec' => isset($argv[6]) ? intval($argv[6]) : 0
+            ];
     break;
   case "door_delay":
-    if (empty($argv[4])) {
+    if (empty($argv[4]) || !isset($argv[5])) {
       showHelp($command);
       exit(1);
     }
-    $data = [ 'seconds' => $argv[4] ];
+    $data = [ 'door' => $argv[4],
+              'seconds' => intval($argv[5])
+            ];
     break;
   case "del_auth":
     if (empty($argv[4])) {
@@ -71,17 +86,18 @@ switch($command) {
     $data = [ 'cardid' => $argv[4] ];
     break;
   case "add_auth":
-    if (empty($argv[4]) || empty($argv[5]) || empty($argv[6]) || empty($argv[7]) || empty($argv[8]) || empty($argv[9]) || empty($argv[10])) {
+    if (empty($argv[4]) || empty($argv[5]) || empty($argv[6])) {
       showHelp($command);
       exit(1);
     }
+    // Door rules are optional and default to '01' (allowed).
     $data = [ 'cardid' => $argv[4],
               'beg' => $argv[5],
               'end' => $argv[6],
-              'ta1' => $argv[7],
-              'ta2' => $argv[8],
-              'ta3' => $argv[9],
-              'ta4' => $argv[10]
+              'ta1' => isset($argv[7]) ? $argv[7] : '01',
+              'ta2' => isset($argv[8]) ? $argv[8] : '01',
+              'ta3' => isset($argv[9]) ? $argv[9] : '01',
+              'ta4' => isset($argv[10]) ? $argv[10] : '01'
             ];
     break;
   case "get_timeAccess":
@@ -132,7 +148,7 @@ switch($command) {
     $data = [ 'interlock' => $argv[4] ];
     break;
   case "set_ip":
-    if (empty($argv[4])) {
+    if (empty($argv[4]) || empty($argv[5]) || empty($argv[6])) {
       showHelp($command);
       exit(1);
     }
@@ -154,9 +170,9 @@ switch($command) {
       exit(1);
     }
     $data = [ 'pad1' => $argv[4],
-              'pad2' => $argv[5],
-              'pad3' => $argv[6],
-              'pad4' => $argv[7]
+              'pad2' => isset($argv[5]) ? $argv[5] : '00',
+              'pad3' => isset($argv[6]) ? $argv[6] : '00',
+              'pad4' => isset($argv[7]) ? $argv[7] : '00'
             ];
     break;
   case "set_superPass":
@@ -165,20 +181,20 @@ switch($command) {
       exit(1);
     }
     $data = [ 'doorIndex' => $argv[4],
-              'spassword1' => $argv[5],
-              'spassword2' => $argv[6],
-              'spassword3' => $argv[7],
-              'spassword4' => $argv[8]
+              'spassword1' => isset($argv[5]) ? intval($argv[5]) : 0,
+              'spassword2' => isset($argv[6]) ? intval($argv[6]) : 0,
+              'spassword3' => isset($argv[7]) ? intval($argv[7]) : 0,
+              'spassword4' => isset($argv[8]) ? intval($argv[8]) : 0
             ];
     break;
   case "help":
     $cmd = '';
-    if ($argv[1] == 'help') {
-      $cmd = $argv[2];
+    if (isset($argv[1]) && $argv[1] == 'help') {
+      $cmd = isset($argv[2]) ? $argv[2] : '';
     }
-    if ($argv[3] == 'help') {
-      $cmd = $argv[4];
-    }    
+    if (isset($argv[3]) && $argv[3] == 'help') {
+      $cmd = isset($argv[4]) ? $argv[4] : '';
+    }
     showHelp($cmd);
     exit(0);
     break;
@@ -197,13 +213,18 @@ $ip = $cardip;
 
 if ($debug) print_r($data);
 
-$cmd = $a->getCmdHex($argv[3],$dt,$data);
+$cmd = $a->getCmdHex($command,$dt,$data);
+if ($cmd === false) {
+  echo "Invalid command parameters.\n";
+  showHelp($command);
+  exit(1);
+}
 
 if ($debug) echo "Send the following command to network\n$cmd\n";
 
 $port = 60000;
 
-$sock = createSocket();
+$sock = createSocket($timeout);
 
 $input = hex2bin($cmd);
 
@@ -225,7 +246,7 @@ $procmsg = $a->procCmd(bin2hex($reply));
 print_r($procmsg);
 echo "\n";
 
-function createSocket() 
+function createSocket($timeout) 
 {
   if(!($sock = socket_create(AF_INET, SOCK_DGRAM, 0)))
   {
@@ -234,6 +255,8 @@ function createSocket()
 
     die("Couldn't create socket: [$errorcode] $errormsg \n");
    }
+   // Don't wait forever if the board doesn't answer (wrong IP or serial number).
+   socket_set_option($sock, SOL_SOCKET, SO_RCVTIMEO, array('sec' => $timeout, 'usec' => 0));
    return $sock;
 }
 
@@ -245,7 +268,7 @@ function getReturnPacket($sock)
      $errorcode = socket_last_error();
      $errormsg = socket_strerror($errorcode);
 
-    die("Receive socket Error: [$errorcode] $errormsg \n");
+    die("No reply from board (check IP address and serial number): [$errorcode] $errormsg \n");
   }
   return $reply;
 }
@@ -279,10 +302,12 @@ function showHelp($cmd)
       echo "php -f sendCommand.php 0.0.0.0 12345678 get_recordIndex\n\n";
       break;
     case 'set_recordIndex':
-      echo "set_recordIndex -- No parameters required.\n";
+      echo "set_recordIndex <index>\n";
+      echo "\n";
+      echo "Marks records up to <index> as read.\n";
       echo "\n";
       echo "Example:\n\n";
-      echo "php -f sendCommand.php 0.0.0.0 12345678 set_recordIndex\n\n";
+      echo "php -f sendCommand.php 0.0.0.0 12345678 set_recordIndex 100\n\n";
       break;
     case 'get_ripp':
       echo "get_ripp -- No parameters required.\n";
@@ -327,16 +352,21 @@ function showHelp($cmd)
       echo "php -f sendCommand.php 0.0.0.0 12345678 get_auth 10012345\n\n";
       break;
     case 'set_ripp':
-      echo "set_ripp <local ip address>\n";
+      echo "set_ripp <local ip address> [<port>] [<interval>]\n";
+      echo "\n";
+      echo "port defaults to 60002. interval is the number of seconds between status\n";
+      echo "messages, 0 (default) sends messages on events only.\n";
       echo "\n";
       echo "Example:\n\n";
-      echo "php -f sendCommand.php 0.0.0.0 12345678 set_ripp 192.168.0.10\n\n";
+      echo "php -f sendCommand.php 0.0.0.0 12345678 set_ripp 192.168.0.10 60002 0\n\n";
       break;
     case 'door_delay':
-      echo "door_delay <seconds>\n";
+      echo "door_delay <door number> <seconds>\n";
+      echo "\n";
+      echo "Sets the door to controlled mode with the given unlock time.\n";
       echo "\n";
       echo "Example:\n\n";
-      echo "php -f sendCommand.php 0.0.0.0 12345678 door_delay 5\n\n";
+      echo "php -f sendCommand.php 0.0.0.0 12345678 door_delay 02 5\n\n";
       break;
     case 'del_auth':
       echo "del_auth <cardid>\n";
@@ -350,7 +380,7 @@ function showHelp($cmd)
       echo "door1 through door4 are optional. If excluded access will be added to all doors.\n";
       echo "\n";
       echo "Example (Facility code 100, Card code 12345, From Jan 01, 2019 to Jan 01, 2020, and valid on doors 1, 2, and 4.):\n\n";
-      echo "php -f sendCommand.php 0.0.0.0 12345678 10012345 20190101 20200101 01 01 00 01\n\n";
+      echo "php -f sendCommand.php 0.0.0.0 12345678 add_auth 10012345 20190101 20200101 01 01 00 01\n\n";
       break;
     case 'get_timeAccess':
       echo "get_timeAccess <index>\n";
@@ -391,13 +421,15 @@ function showHelp($cmd)
       echo "set_ip <ip> <netmask> <gateway>\n";
       echo "\n";
       echo "Example:\n\n";
-      echo "php -f sendCommand.php 0.0.0.0 12345678 192.168.1.123 255.255.255.0 192.168.1.1\n\n";
+      echo "php -f sendCommand.php 0.0.0.0 12345678 set_ip 192.168.1.123 255.255.255.0 192.168.1.1\n\n";
       break;
     case 'get_records':
-      echo "get_records -- No parameters required.\n";
+      echo "get_records [<index>]\n";
+      echo "\n";
+      echo "Gets the record at <index>, or the newest record if no index is given.\n";
       echo "\n";
       echo "Example:\n\n";
-      echo "php -f sendCommand.php 0.0.0.0 12345678 get_records\n\n";
+      echo "php -f sendCommand.php 0.0.0.0 12345678 get_records 100\n\n";
       break;
     case 'reset_alarm':
       echo "reset_alarm -- No parameters required.\n";
@@ -423,10 +455,10 @@ function showHelp($cmd)
       echo "set_superPass <door> <spassword1> <spassword2> <spassword3> <spassword4>\n";
       echo "\n";
       echo "door is 01 through 04, and\n";
-      echo "spassword1 through spassword4 are the four bytes of the super password\n";
+      echo "spassword1 through spassword4 are up to four keypad super passwords (0 clears one)\n";
       echo "\n";
       echo "Example:\n\n";
-      echo "php -f sendCommand.php 0.0.0.0 12345678 set_superPass 34 27 18 22\n\n";
+      echo "php -f sendCommand.php 0.0.0.0 12345678 set_superPass 01 1234 5678 0 0\n\n";
       break;
     default:
       echo "Usage: \n";
@@ -442,7 +474,7 @@ function showHelp($cmd)
       echo "\n";
       echo "get_time, dev_status, get_auth_rec, get_recordIndex, get_ripp,\n";
       echo "del_auth_all, search, open_door, door_delay_get, set_time, get_auth,\n";
-      echo "set_ripp, door_delay, del_auth, add_auth, set_timeAccess\n";
+      echo "set_ripp, door_delay, del_auth, add_auth,\n";
       echo "get_timeAccess, set_timeAccess, get_alarm_state, interlock, set_ip,\n";
       echo "get_records, reset_alarm, set_recordIndex, userid, keypad_switch,\n";
       echo "set_superPass\n";
@@ -451,7 +483,7 @@ function showHelp($cmd)
       echo "\n";
       echo "help -- Shows this information\n";
       echo "\n";
-      echo "help command -- shows command soecific help\n\n";
+      echo "help command -- shows command specific help\n\n";
       break;
   }
 }
