@@ -107,4 +107,35 @@
     <string name="delete_all_title">Delete ALL cards</string>
     <string name="delete_all_message">This removes EVERY card from controller %1$d. Nobody will be able to badge in until cards are added again.</string>
     <string name="delete_all_confirm">Delete all</string>
+    <string name="clock">Clock</string>
+    <string name="controller_time">Controller time</string>
+    <string name="phone_time">This device</string>
+    <string name="sync_time">Sync to this device\'s time</string>
+    <string name="event_listener">Event listener</string>
+    <string name="ip_address">IP address</string>
+    <string name="subnet_mask">Subnet mask</string>
+    <string name="gateway">Gateway</string>
+    <string name="port">Port</string>
+    <string name="interval_s">Status interval (s)</string>
+    <string name="interval_note">Interval 0 = send only when something happens (card swipe, door opened, button pressed).</string>
+    <string name="use_this_device">Use this device</string>
+    <string name="doors_section">Doors</string>
+    <string name="door_n">Door %1$d</string>
+    <string name="edit_names">Edit names and door count</string>
+    <string name="doors_of">Controller %1$d</string>
+    <string name="controller_name">Controller name</string>
+    <string name="door_count">Number of doors</string>
+    <string name="door_n_name">Door %1$d name</string>
+    <string name="network">Network</string>
+    <string name="change_network">Change…</string>
+    <string name="change">Change</string>
+    <string name="change_network_title">Change controller network settings</string>
+    <string name="change_network_message">Change controller %1$d to:\n\nIP address: %2$s\nSubnet mask: %3$s\nGateway: %4$s\n\nIf these are wrong you may lose contact with the controller until it is on a reachable network.</string>
+    <string name="display">Display</string>
+    <string name="keep_screen_on">Keep screen on</string>
+    <string name="activity_log">Activity log</string>
+    <string name="open_activity_log">Open activity log</string>
+    <string name="show_raw_packets">Show raw packets</string>
+    <string name="clear">Clear</string>
+    <string name="about">About</string>
 </resources>

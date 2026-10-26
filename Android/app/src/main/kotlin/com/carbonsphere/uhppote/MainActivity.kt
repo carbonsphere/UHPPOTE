@@ -38,6 +38,8 @@ import com.carbonsphere.uhppote.ui.eventsViewModel
 import com.carbonsphere.uhppote.ui.mainViewModel
 import com.carbonsphere.uhppote.ui.profiles.ProfilesScreen
 import com.carbonsphere.uhppote.ui.settings.SettingsScreen
+import com.carbonsphere.uhppote.ui.settings.SettingsViewModel
+import com.carbonsphere.uhppote.ui.settingsViewModel
 import com.carbonsphere.uhppote.ui.status.StatusScreen
 import com.carbonsphere.uhppote.ui.status.StatusViewModel
 import com.carbonsphere.uhppote.ui.statusViewModel
@@ -100,7 +102,11 @@ private fun MainContent(vm: MainViewModel) {
                     val events: EventsViewModel = viewModel { eventsViewModel(graph, vm.selectedController) }
                     EventsScreen(events)
                 }
-                Destination.SETTINGS -> SettingsScreen()
+                Destination.SETTINGS -> {
+                    val graph = LocalContext.current.graph
+                    val settings: SettingsViewModel = viewModel { settingsViewModel(graph, vm.selectedController) }
+                    SettingsScreen(settings)
+                }
             }
         }
     }

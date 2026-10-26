@@ -7,6 +7,7 @@ import com.carbonsphere.uhppote.domain.resolveProfile
 import com.carbonsphere.uhppote.ui.cards.CardsViewModel
 import com.carbonsphere.uhppote.ui.doors.DoorsViewModel
 import com.carbonsphere.uhppote.ui.events.EventsViewModel
+import com.carbonsphere.uhppote.ui.settings.SettingsViewModel
 import com.carbonsphere.uhppote.ui.status.StatusViewModel
 import java.io.IOException
 import kotlinx.coroutines.flow.StateFlow
@@ -45,3 +46,13 @@ fun eventsViewModel(g: AppGraph, controller: StateFlow<SavedController?>) = Even
 
 /** Builds the CardsViewModel for the selected controller. */
 fun cardsViewModel(g: AppGraph, controller: StateFlow<SavedController?>) = CardsViewModel(controller, g.log, g::controller, g.cardCache)
+
+/** Builds the SettingsViewModel for the selected controller. */
+fun settingsViewModel(g: AppGraph, controller: StateFlow<SavedController?>) = SettingsViewModel(
+    controller = controller,
+    store = g.store,
+    log = g.log,
+    controllerFor = g::controller,
+    localAddress = { g.wifi.localNet()?.address },
+    searchNet = { g.search(it) },
+)

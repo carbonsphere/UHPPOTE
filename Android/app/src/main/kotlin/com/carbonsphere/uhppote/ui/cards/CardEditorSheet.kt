@@ -72,7 +72,7 @@ fun CardEditor(vm: CardsViewModel, controller: SavedController, editing: Editing
     val today = remember { LocalDate.now() }
     var number by remember(editing) { mutableStateOf(existing?.number?.toString() ?: "") }
     var from by remember(editing) { mutableStateOf(existing?.from ?: today) }
-    var to by remember(editing) { mutableStateOf(existing?.to ?: today.plusYears(1)) }
+    var to by remember(editing) { mutableStateOf(existing?.to ?: LocalDate.of(today.year + 1, 12, 31)) }
     val doors = remember(editing) { mutableStateListOf(*(existing?.doors ?: List(4) { 0 }).toTypedArray()) }
     var problem by remember(editing) { mutableStateOf<CardProblem?>(null) }
     var confirmDelete by remember(editing) { mutableStateOf(false) }
