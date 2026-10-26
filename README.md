@@ -20,7 +20,7 @@ Supported Firmware Version V6.56+
 
 # Supported commands
     > search               //Search
-    > get_ip/set_ip        //Get/Set device IP
+    > set_ip               //Set device IP (search returns the current IP)
     > get_ripp/set_ripp    //Get/Set Remote host IP
     > door_delay/door_delay_get    //Set/Get Door Delay
     > open_door            //Open Door
@@ -48,4 +48,13 @@ Supported Firmware Version V6.56+
 ```console
 $ php search.php
 ```
+
+# Documentation
+See [DOCUMENTATION.md](DOCUMENTATION.md) for the packet format, every command and its parameters, and the list of fixed bugs.
+
+# Windows desktop app
+[Windows/](Windows/README.md) contains **UHPPOTE Manager**, a native Windows app (written in Go) to search for controllers, open doors, manage cards, read events and change settings. Build it with `Windows\build.bat` on Windows or `Windows/build.sh` from Linux/WSL/macOS.
+
+# License
+MIT. See [LICENSE](LICENSE).
 
