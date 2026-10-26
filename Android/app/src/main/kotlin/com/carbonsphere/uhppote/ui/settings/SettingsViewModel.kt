@@ -66,6 +66,7 @@ class SettingsViewModel(
     private val searchNet: suspend (InetAddress?) -> List<Device>,
     private val now: () -> LocalDateTime = LocalDateTime::now,
     private val settleMs: Long = 2000,
+    private val onDoorsChanged: suspend () -> Unit = {},
 ) : ViewModel() {
     val state: StateFlow<AppState> = store.state.stateIn(viewModelScope, SharingStarted.Eagerly, AppState())
 
@@ -213,13 +214,17 @@ class SettingsViewModel(
 
     fun setShowRawPackets(on: Boolean) = update { it.copy(showRawPackets = on) }
 
-    fun setDoorCount(serial: Long, n: Int) = update { it.setDoorCount(serial, n) }
+    fun setDoorCount(serial: Long, n: Int) = update(doors = true) { it.setDoorCount(serial, n) }
 
-    fun setDoorName(serial: Long, door: Int, name: String) = update { it.setDoorName(serial, door, name) }
+    fun setDoorName(serial: Long, door: Int, name: String) = update(doors = true) { it.setDoorName(serial, door, name) }
 
     fun renameController(serial: Long, name: String) = update { it.renameController(serial, name) }
 
-    private fun update(transform: (AppState) -> AppState) {
-        viewModelScope.launch { store.update(transform) }
+    private fun update(doors: Boolean = false, transform: (AppState) -> AppState) {
+        viewModelScope.launch {
+            store.update(transform)
+            // Home-screen widgets show door names.
+            if (doors) onDoorsChanged()
+        }
     }
 }

@@ -55,4 +55,5 @@ fun settingsViewModel(g: AppGraph, controller: StateFlow<SavedController?>) = Se
     controllerFor = g::controller,
     localAddress = { g.wifi.localNet()?.address },
     searchNet = { g.search(it) },
+    onDoorsChanged = g::refreshWidgets,
 )

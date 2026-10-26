@@ -138,4 +138,13 @@
     <string name="show_raw_packets">Show raw packets</string>
     <string name="clear">Clear</string>
     <string name="about">About</string>
+    <string name="widget_label">Open door</string>
+    <string name="widget_description">One tap opens a door from the home screen.</string>
+    <string name="widget_pick_door">Which door should this button open?</string>
+    <string name="widget_no_controllers">No controllers saved yet. Open UHPPOTE Manager on the controller\'s Wi‑Fi and add one first.</string>
+    <string name="widget_opening">Opening…</string>
+    <string name="widget_opened">Opened ✓</string>
+    <string name="widget_refused">Refused</string>
+    <string name="widget_no_reply">No reply – on the right Wi‑Fi?</string>
+    <string name="widget_set_up_again">Set up again in the app</string>
 </resources>

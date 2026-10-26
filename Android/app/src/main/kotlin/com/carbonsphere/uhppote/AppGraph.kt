@@ -12,6 +12,8 @@ import com.carbonsphere.uhppote.protocol.Controller
 import com.carbonsphere.uhppote.protocol.ControllerApi
 import com.carbonsphere.uhppote.protocol.Device
 import com.carbonsphere.uhppote.protocol.search as searchNetwork
+import com.carbonsphere.uhppote.widget.DoorWidget
+import androidx.glance.appwidget.updateAll
 import java.io.File
 import java.net.InetAddress
 import kotlinx.coroutines.CoroutineScope
@@ -21,6 +23,7 @@ import kotlinx.coroutines.launch
 
 /** The app's long-lived objects, shared by the activity and the widget. */
 class AppGraph(context: Context) {
+    private val app = context.applicationContext
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     val store: AppStore = DataStoreAppStore(context.applicationContext)
     val wifi = WifiNetwork(context)
@@ -50,4 +53,7 @@ class AppGraph(context: Context) {
             log = packetLog,
         )
     }
+
+    /** Redraws every home-screen door widget, e.g. after a door was renamed. */
+    suspend fun refreshWidgets() = DoorWidget().updateAll(app)
 }
