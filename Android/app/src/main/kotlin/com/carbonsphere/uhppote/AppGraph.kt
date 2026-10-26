@@ -8,6 +8,7 @@ import com.carbonsphere.uhppote.net.ActivityLog
 import com.carbonsphere.uhppote.net.WifiNetwork
 import com.carbonsphere.uhppote.net.parseIpv4
 import com.carbonsphere.uhppote.protocol.Controller
+import com.carbonsphere.uhppote.protocol.ControllerApi
 import com.carbonsphere.uhppote.protocol.Device
 import com.carbonsphere.uhppote.protocol.search as searchNetwork
 import java.net.InetAddress
@@ -33,7 +34,7 @@ class AppGraph(context: Context) {
     private val packetLog = log.packetLog { rawPackets }
 
     /** A client for a saved controller, bound to Wi-Fi and logging packets. */
-    fun controller(saved: SavedController): Controller {
+    fun controller(saved: SavedController): ControllerApi {
         val address = parseIpv4(saved.ip) ?: InetAddress.getByName("0.0.0.0")
         return Controller(saved.serial, address, sockets = wifi.socketFactory(), log = packetLog)
     }

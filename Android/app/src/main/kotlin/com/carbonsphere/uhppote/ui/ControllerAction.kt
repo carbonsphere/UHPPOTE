@@ -8,7 +8,11 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 /** Reported when the controller answers but rejects a command. */
-class ControllerRefused : IOException("Controller rejected the command")
+class ControllerRefused : IOException(MESSAGE) {
+    companion object {
+        const val MESSAGE = "Controller rejected the command"
+    }
+}
 
 /** Throws [ControllerRefused] if the controller answered "no". */
 fun Boolean.orRefused() {

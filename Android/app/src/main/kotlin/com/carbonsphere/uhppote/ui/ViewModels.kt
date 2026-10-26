@@ -1,8 +1,11 @@
 package com.carbonsphere.uhppote.ui
 
 import com.carbonsphere.uhppote.AppGraph
+import com.carbonsphere.uhppote.data.Profile
 import com.carbonsphere.uhppote.domain.resolveProfile
+import com.carbonsphere.uhppote.ui.doors.DoorsViewModel
 import java.io.IOException
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 
 /** Builds the MainViewModel from the app graph. */
@@ -26,3 +29,6 @@ fun mainViewModel(g: AppGraph) = MainViewModel(
     },
     searchNet = { g.search(it) },
 )
+
+/** Builds the DoorsViewModel for the active profile. */
+fun doorsViewModel(g: AppGraph, profile: StateFlow<Profile?>) = DoorsViewModel(profile, g.log, g::controller)

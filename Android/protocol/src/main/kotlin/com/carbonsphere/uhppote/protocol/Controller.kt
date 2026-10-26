@@ -42,13 +42,13 @@ const val NEWEST_EVENT = 0xFFFFFFFFL
  * at a time.
  */
 class Controller(
-    val serial: Long,
+    override val serial: Long,
     val address: InetAddress,
     val port: Int = PORT,
     val timeoutMs: Int = 2500,
     private val sockets: SocketFactory = DEFAULT_SOCKETS,
     private val log: PacketLog? = null,
-) {
+) : ControllerApi {
     private val mutex = Mutex()
 
     /** Sends req and waits for the matching reply. */
@@ -94,48 +94,48 @@ class Controller(
     private suspend fun execResult(req: Packet): Boolean = exec(req).result()
 
     /** The controller's current state. */
-    suspend fun status(): Status = parseStatus(exec(req(Cmd.STATUS)))
+    override suspend fun status(): Status = parseStatus(exec(req(Cmd.STATUS)))
 
     /** The controller clock. */
-    suspend fun getTime(): LocalDateTime {
+    override suspend fun getTime(): LocalDateTime {
         val p = exec(req(Cmd.GET_TIME))
         return p.dateTime(8) ?: throw IOException("Invalid time in reply: ${p.bcd(8, 7)}")
     }
 
     /** Sets the controller clock and returns the time it now reports. */
-    suspend fun setTime(t: LocalDateTime): LocalDateTime? {
+    override suspend fun setTime(t: LocalDateTime): LocalDateTime? {
         val r = req(Cmd.SET_TIME).apply { putDateTime(8, t) }
         return exec(r).dateTime(8)
     }
 
     /** Unlocks door 1-4 for its configured delay. */
-    suspend fun openDoor(door: Int): Boolean {
+    override suspend fun openDoor(door: Int): Boolean {
         checkDoor(door)
         return execResult(req(Cmd.OPEN_DOOR).apply { this[8] = door })
     }
 
     /** A door's mode and unlock delay. */
-    suspend fun getDoorControl(door: Int): DoorControl {
+    override suspend fun getDoorControl(door: Int): DoorControl {
         checkDoor(door)
         val p = exec(req(Cmd.GET_DOOR_CONTROL).apply { this[8] = door })
         return DoorControl(p[8], p[9], p[10])
     }
 
     /** Sets a door's mode and unlock delay. */
-    suspend fun setDoorControl(dc: DoorControl): DoorControl {
+    override suspend fun setDoorControl(dc: DoorControl): DoorControl {
         checkDoor(dc.door)
         val p = exec(req(Cmd.SET_DOOR_CONTROL).apply { this[8] = dc.door; this[9] = dc.mode; this[10] = dc.delay })
         return DoorControl(p[8], p[9], p[10])
     }
 
     /** Where the controller pushes live events. */
-    suspend fun getListener(): Listener {
+    override suspend fun getListener(): Listener {
         val p = exec(req(Cmd.GET_LISTENER))
         return Listener(p.ip(8), p.u16(12), p[14])
     }
 
     /** Sets where the controller pushes live events. */
-    suspend fun setListener(l: Listener): Boolean {
+    override suspend fun setListener(l: Listener): Boolean {
         val r = req(Cmd.SET_LISTENER).apply {
             putIp(8, l.ip)
             putU16(12, l.port)
@@ -145,10 +145,10 @@ class Controller(
     }
 
     /** The number of cards stored on the controller. */
-    suspend fun getCardCount(): Long = exec(req(Cmd.GET_CARD_COUNT)).u32(8)
+    override suspend fun getCardCount(): Long = exec(req(Cmd.GET_CARD_COUNT)).u32(8)
 
     /** Looks up a card; null if it is not stored. */
-    suspend fun getCard(number: Long): Card? {
+    override suspend fun getCard(number: Long): Card? {
         checkCard(number)
         val p = exec(req(Cmd.GET_CARD).apply { putU32(8, number) })
         val got = p.u32(8)
@@ -160,7 +160,7 @@ class Controller(
      * The card in slot index (1-based) of the controller's card table:
      * [CardSlot.End] past the last slot, [CardSlot.Deleted] for a deleted card.
      */
-    suspend fun getCardByIndex(index: Long): CardSlot {
+    override suspend fun getCardByIndex(index: Long): CardSlot {
         val p = exec(req(Cmd.GET_CARD_BY_INDEX).apply { putU32(8, index) })
         return when (p.u32(8)) {
             0L -> CardSlot.End
@@ -177,7 +177,7 @@ class Controller(
     )
 
     /** Adds or updates a card. */
-    suspend fun putCard(card: Card): Boolean {
+    override suspend fun putCard(card: Card): Boolean {
         checkCard(card.number)
         val r = req(Cmd.PUT_CARD).apply {
             putU32(8, card.number)
@@ -189,31 +189,31 @@ class Controller(
     }
 
     /** Removes a card. */
-    suspend fun deleteCard(number: Long): Boolean {
+    override suspend fun deleteCard(number: Long): Boolean {
         checkCard(number)
         return execResult(req(Cmd.DELETE_CARD).apply { putU32(8, number) })
     }
 
     /** Removes every card from the controller. */
-    suspend fun deleteAllCards(): Boolean =
+    override suspend fun deleteAllCards(): Boolean =
         execResult(req(Cmd.DELETE_ALL_CARDS).apply { CONFIRM_MAGIC.copyInto(bytes, 8) })
 
     /** The "already read" event index. */
-    suspend fun getEventIndex(): Long = exec(req(Cmd.GET_EVENT_INDEX)).u32(8)
+    override suspend fun getEventIndex(): Long = exec(req(Cmd.GET_EVENT_INDEX)).u32(8)
 
     /** Sets the "already read" event index. */
-    suspend fun setEventIndex(index: Long): Boolean =
+    override suspend fun setEventIndex(index: Long): Boolean =
         execResult(req(Cmd.SET_EVENT_INDEX).apply { putU32(8, index); CONFIRM_MAGIC.copyInto(bytes, 12) })
 
     /** The event stored at index. */
-    suspend fun getEvent(index: Long): Event =
+    override suspend fun getEvent(index: Long): Event =
         parseEvent(exec(req(Cmd.GET_EVENT).apply { putU32(8, index) }), 8)
 
     /** Sets the door interlock mode (see [INTERLOCK_MODES]). */
-    suspend fun setInterlock(mode: Int): Boolean = execResult(req(Cmd.SET_INTERLOCK).apply { this[8] = mode })
+    override suspend fun setInterlock(mode: Int): Boolean = execResult(req(Cmd.SET_INTERLOCK).apply { this[8] = mode })
 
     /** Enables or disables the keypad on each reader. */
-    suspend fun setKeypads(enabled: List<Boolean>): Boolean {
+    override suspend fun setKeypads(enabled: List<Boolean>): Boolean {
         val r = req(Cmd.SET_KEYPADS).apply {
             enabled.take(4).forEachIndexed { i, on -> if (on) this[8 + i] = 0x01 }
         }
@@ -224,7 +224,7 @@ class Controller(
      * Changes the controller's IP settings. The controller does not reply;
      * search again afterwards to confirm the change.
      */
-    suspend fun setAddress(ip: Inet4Address, mask: Inet4Address, gateway: Inet4Address) {
+    override suspend fun setAddress(ip: Inet4Address, mask: Inet4Address, gateway: Inet4Address) {
         val r = req(Cmd.SET_ADDRESS).apply {
             putIp(8, ip)
             putIp(12, mask)

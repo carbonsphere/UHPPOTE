@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -49,6 +50,8 @@ class MainViewModel(
     private val newId: () -> String = { UUID.randomUUID().toString() },
 ) : ViewModel() {
     val state: StateFlow<AppState> = store.state.stateIn(viewModelScope, SharingStarted.Eagerly, AppState())
+
+    val activeProfile: StateFlow<Profile?> = state.map { it.activeProfile() }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     // null while the launch check is running, true to show the profile list.
     private val showProfiles = MutableStateFlow<Boolean?>(null)
